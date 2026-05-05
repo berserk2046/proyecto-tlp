@@ -18,6 +18,11 @@ class Parser:
         self.posicion = 0
         self.ast = {"tipo_juego": None, "config": {}, "shapes": {}, "events": {}}
 
+    def existe(self, name):
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == name:
+            return 1
+        return 0
+
     def parse(self):
         while self.posicion < len(self.tokens):
             token_actual = self.tokens[self.posicion]
@@ -61,7 +66,31 @@ class Parser:
         self.consumir('DEFINE')
         self.consumir('SHAPE')
         nombre_shape = self.consumir()
+        color_shape = None
+        peso = None
         self.consumir(':')
+
+        # Configuracion Shape
+        config_shape = 0
+        # Color
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'COLOR':
+            config_shape = 1
+            self.consumir('COLOR')
+            self.consumir(':')
+            color_shape = self.consumir()
+        # Chance
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'CHANCE':
+            config_shape = 1
+            self.consumir('CHANCE')
+            self.consumir(':')
+            peso = self.consumir()
+
+        # Asegura retrocompatibilidad al solo cambiar la estructura de el json si se encuentran variables de configuracion
+        if config_shape:
+            config = {}
+            config['color'] = color_shape
+            config['chance'] = peso
+
         estados = []
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'STATE':
             self.consumir('STATE')
@@ -78,7 +107,12 @@ class Parser:
                 matriz.append(fila)
             estados.append(matriz)
         self.consumir('END')
-        self.ast['shapes'][nombre_shape] = estados
+        if config_shape:
+            self.ast['shapes'][nombre_shape] = {}
+            self.ast['shapes'][nombre_shape]['estados'] = estados
+            self.ast['shapes'][nombre_shape]['config'] = config
+        else:
+            self.ast['shapes'][nombre_shape] = estados
 
     # --- FUNCION CORREGIDA ---
     def parsear_evento(self):

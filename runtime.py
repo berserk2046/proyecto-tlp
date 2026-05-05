@@ -53,8 +53,10 @@ class Juego:
         
         if self.tipo_juego == 'TETRIS':
             self.pieza_actual = None
+            self.pieza_old = 0
             self.pieza_x, self.pieza_y, self.pieza_rotacion = 0, 0, 0
-            self.velocidad_gravedad = 0.4
+            self.pieza_config = None
+            self.velocidad_gravedad = 0.2
         
         if self.tipo_juego == 'SNAKE':
             self.serpiente_cuerpo = []
@@ -134,6 +136,8 @@ class Juego:
 
         # 2. Dibujar la pieza actual de Tetris
         if self.tipo_juego == 'TETRIS' and self.pieza_actual:
+            if not self.pieza_old:
+                COLOR_PIEZA = "#" + self.pieza_config['color']
             matriz_pieza = self.pieza_actual[self.pieza_rotacion]
             for y_offset, fila in enumerate(matriz_pieza):
                 for x_offset, celda in enumerate(fila):
@@ -181,10 +185,40 @@ class Juego:
 
     # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
     # ---------------------------------------------------------------------
+    #Probabilidad con pesos
+    def probabilidad_ponderada(self):
+        info = self.datos_juego['shapes']
+        names = list(info.keys())
+        promedio = (100.0 / len(names)) / 100.0
+        lista = {}
+        current = 0
+        for i in range(len(names)):
+            if not 'estados' in info[names[i]] or not info[names[i]]['config']['chance']:
+                lista[current] = names[i]
+                current += promedio
+            elif info[names[i]]['config']['chance'] > 0:
+                lista[current] = names[i]
+                current += float(info[names[i]]['config']['chance']) / 100
+
+        rand = random.uniform(0, current)
+        choice = None
+        for key in sorted(lista.keys() + [current]):
+            if rand < key:
+                return choice
+            choice = lista[key]
+        return None
 
     def tetris_spawn_pieza(self):
-        nombre_pieza = random.choice(self.datos_juego['shapes'].keys())
-        self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]
+        nombre_pieza = self.probabilidad_ponderada()
+
+        if 'estados' in self.datos_juego['shapes'][nombre_pieza]:
+            self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]['estados']
+            self.pieza_config = self.datos_juego['shapes'][nombre_pieza]['config']
+            self.pieza_old = 0
+        else:
+            self.pieza_old = 1
+            self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]
+
         self.pieza_x, self.pieza_y, self.pieza_rotacion = self.ancho / 2 - 2, 0, 0
         if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
             self.juego_terminado = True
