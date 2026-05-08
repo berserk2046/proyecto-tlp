@@ -57,6 +57,12 @@ class Juego:
             self.pieza_x, self.pieza_y, self.pieza_rotacion = 0, 0, 0
             self.pieza_config = None
             self.velocidad_gravedad = 0.2
+            # BOOST XP
+            self.boost_xp = False
+            self.tiempo_boost = 0
+            self.duracion_boost = 5
+            self.puntos_normales = 100
+            self.puntos_boost = 300
         
         if self.tipo_juego == 'SNAKE':
             self.serpiente_cuerpo = []
@@ -84,6 +90,11 @@ class Juego:
         if self.timer_gravedad >= self.velocidad_gravedad:
             self.timer_gravedad = 0
             self.ejecutar_evento('ON_TICK')
+        # DESACTIVAR BOOST XP
+        if self.tipo_juego == 'TETRIS' and self.boost_xp:
+            if time.time() - self.tiempo_boost >= self.duracion_boost:
+                self.boost_xp = False
+                print "BOOST XP DESACTIVADO"
 
         self.dibujar()
 
@@ -124,6 +135,9 @@ class Juego:
         # Colores
         COLOR_GRID_FIJA = '#343434' # Gris oscuro para las celdas fijadas (Tetris)
         COLOR_PIEZA = '#00FFFF'     # Cyan para la pieza activa (Tetris)
+        # COLORES BOOST XP
+        if self.tipo_juego == 'TETRIS' and self.boost_xp:
+            COLOR_PIEZA = '#FFD700'
         COLOR_SNAKE_CABEZA = '#00FF00' # Verde brillante
         COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
         COLOR_FOOD = '#FF0000'      # Rojo
@@ -264,11 +278,43 @@ class Juego:
         return False
 
     def tetris_limpiar_lineas(self):
+
         nuevo_grid = [fila for fila in self.grid if not all(fila)]
+
         lineas_limpias = self.alto - len(nuevo_grid)
+
         if lineas_limpias > 0:
-            self.grid = [[0] * self.ancho for _ in range(lineas_limpias)] + nuevo_grid
-            for _ in range(lineas_limpias): self.ejecutar_evento('ON_LINE_CLEAR')
+
+            self.grid = (
+                [[0] * self.ancho for _ in range(lineas_limpias)]
+                + nuevo_grid
+            )
+
+        # ACTIVAR BOOST XP RANDOM
+        if random.randint(1, 100) <= 25:
+
+            self.boost_xp = True
+
+            self.tiempo_boost = time.time()
+
+            print "BOOST XP ACTIVADO"
+
+        # DAR PUNTOS
+        if self.boost_xp:
+
+            self.puntuacion += (
+                self.puntos_boost * lineas_limpias
+            )
+
+        else:
+
+            self.puntuacion += (
+                self.puntos_normales * lineas_limpias
+            )
+
+        for _ in range(lineas_limpias):
+
+            self.ejecutar_evento('ON_LINE_CLEAR')
     
     def snake_spawn_jugador(self, accion):
         coords = accion['params'][0] if accion['params'] else [self.ancho / 2, self.alto / 2]
