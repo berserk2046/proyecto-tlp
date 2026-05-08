@@ -47,6 +47,9 @@ class Juego:
         # Nota: Se ha eliminado 'Q: Salir' de los controles en pantalla
         self.label_controles = tk.Label(self.marco_score, text="CONTROLES\nFlechas: Mover/Rotar", bg='#222222', fg='gray', font=('Consolas', 10))
         self.label_controles.pack(pady=20, padx=10)
+        if self.tipo_juego == 'TETRIS':
+            self.label_pow = tk.Label(self.marco_score, text="BOOST POWER:\nAleatoriamente se otorgara un boost (10%)\nLas piezas cambiaran a amarillo\nLa XP se multiplicara por cada linea limpiada.", bg='#222222', fg='yellow', font=('Consolas', 10))
+            self.label_pow.pack(pady=30, padx=10)
 
         # Configurar eventos de teclado. Usamos <Key> para capturar cualquier tecla
         self.root.bind('<Key>', self.manejar_input_gui)
@@ -293,7 +296,7 @@ class Juego:
             )
 
         # ACTIVAR BOOST XP RANDOM
-        if random.randint(1, 100) <= 25:
+        if random.randint(1, 100) <= 10:
 
             self.boost_xp = True
 
