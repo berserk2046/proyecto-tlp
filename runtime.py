@@ -60,7 +60,7 @@ class Juego:
             # BOOST XP
             self.boost_xp = False
             self.tiempo_boost = 0
-            self.duracion_boost = 15
+            self.duracion_boost = 7
             self.puntos_normales = 100
             self.puntos_boost = 300
         
@@ -137,8 +137,7 @@ class Juego:
         COLOR_GRID_FIJA = '#343434' # Gris oscuro para las celdas fijadas (Tetris)
         COLOR_PIEZA = '#00FFFF'     # Cyan para la pieza activa (Tetris)
         # COLORES BOOST XP
-        if self.tipo_juego == 'TETRIS' and self.boost_xp:
-            COLOR_PIEZA = '#FFD700'
+        
         COLOR_SNAKE_CABEZA = '#00FF00' # Verde brillante
         COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
         COLOR_FOOD = '#FF0000'      # Rojo
@@ -151,7 +150,9 @@ class Juego:
 
         # 2. Dibujar la pieza actual de Tetris
         if self.tipo_juego == 'TETRIS' and self.pieza_actual:
-            if not self.pieza_old:
+            if self.tipo_juego == 'TETRIS' and self.boost_xp:
+                COLOR_PIEZA = '#FFD700'
+            elif not self.pieza_old:
                 COLOR_PIEZA = "#" + self.pieza_config['color']
             matriz_pieza = self.pieza_actual[self.pieza_rotacion]
             for y_offset, fila in enumerate(matriz_pieza):
