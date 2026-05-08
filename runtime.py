@@ -60,7 +60,7 @@ class Juego:
             # BOOST XP
             self.boost_xp = False
             self.tiempo_boost = 0
-            self.duracion_boost = 5
+            self.duracion_boost = 15
             self.puntos_normales = 100
             self.puntos_boost = 300
         
@@ -94,6 +94,7 @@ class Juego:
         if self.tipo_juego == 'TETRIS' and self.boost_xp:
             if time.time() - self.tiempo_boost >= self.duracion_boost:
                 self.boost_xp = False
+                self.velocidad_gravedad = 0.2
                 print "BOOST XP DESACTIVADO"
 
         self.dibujar()
@@ -296,8 +297,11 @@ class Juego:
             self.boost_xp = True
 
             self.tiempo_boost = time.time()
+            self.velocidad_gravedad = 0.08
+            print (self.velocidad_gravedad)
 
-            print "BOOST XP ACTIVADO"
+            if self.boost_xp:
+                print "BOOST:", self.velocidad_gravedad
 
         # DAR PUNTOS
         if self.boost_xp:
