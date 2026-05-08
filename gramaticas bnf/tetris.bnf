@@ -5,7 +5,9 @@
 <definiciones> ::= <definicion_shape> | <definicion_shape> <definiciones>
 <eventos>    ::= <evento> | <evento> <eventos>
 
-<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <estados> "END"
+<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <configuracion> <estados> "END"
+<configuracion>	   ::= <config> | <config> <config>
+<config>		   ::= <var> ":" <numero>
 <estados>          ::= <estado> | <estado> <estados>
 <estado>           ::= "STATE" <numero> ":" <matriz>
 <matriz>           ::= <fila> | <fila> <matriz>
@@ -22,6 +24,7 @@
 <accion_rotar>  ::= "ROTATE" "CURRENT_PIECE"
 <accion_puntos> ::= "INCREASE_SCORE" <numero>
 
+<var>			::= "COLOR" | "CHANCE"
 <direccion>     ::= "LEFT" | "RIGHT" | "DOWN"
 <identificador> ::= <letra> | <letra> <identificador>
 <numero>        ::= <digito> | <digito> <numero>
