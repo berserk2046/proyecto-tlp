@@ -155,7 +155,7 @@ class Juego:
         if self.tipo_juego == 'TETRIS' and self.pieza_actual:
             if self.tipo_juego == 'TETRIS' and self.boost_xp:
                 COLOR_PIEZA = '#FFD700'
-            elif not self.pieza_old:
+            elif not self.pieza_old and self.pieza_config['color'] != None:
                 COLOR_PIEZA = "#" + self.pieza_config['color']
             matriz_pieza = self.pieza_actual[self.pieza_rotacion]
             for y_offset, fila in enumerate(matriz_pieza):
