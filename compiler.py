@@ -61,6 +61,11 @@ class Parser:
         alto = int(self.consumir())
         self.consumir(')')
         self.ast['config']['grid_size'] = [ancho, alto]
+        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'POWER':
+            self.consumir('POWER')
+            power = self.consumir()
+            if power == 'ON': self.ast['config']['power'] = 1
+            else: self.ast['config']['power'] = 0
 
     def parsear_shape(self):
         self.consumir('DEFINE')

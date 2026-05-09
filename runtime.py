@@ -20,6 +20,7 @@ class Juego:
         self.ancho = config.get('grid_size', [10, 20])[0]
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
+        self.power = config.get('power', 0)
         self.puntuacion = 0
         self.juego_terminado = False
         
@@ -47,7 +48,7 @@ class Juego:
         # Nota: Se ha eliminado 'Q: Salir' de los controles en pantalla
         self.label_controles = tk.Label(self.marco_score, text="CONTROLES\nFlechas: Mover/Rotar", bg='#222222', fg='gray', font=('Consolas', 10))
         self.label_controles.pack(pady=20, padx=10)
-        if self.tipo_juego == 'TETRIS':
+        if self.tipo_juego == 'TETRIS' and self.power:
             self.label_pow = tk.Label(self.marco_score, text="BOOST POWER:\nAleatoriamente se otorgara un boost (10%)\nLas piezas cambiaran a amarillo\nLa XP se multiplicara por cada linea limpiada.", bg='#222222', fg='yellow', font=('Consolas', 10))
             self.label_pow.pack(pady=30, padx=10)
 
@@ -94,7 +95,7 @@ class Juego:
             self.timer_gravedad = 0
             self.ejecutar_evento('ON_TICK')
         # DESACTIVAR BOOST XP
-        if self.tipo_juego == 'TETRIS' and self.boost_xp:
+        if self.tipo_juego == 'TETRIS' and self.power and self.boost_xp:
             if time.time() - self.tiempo_boost >= self.duracion_boost:
                 self.boost_xp = False
                 self.velocidad_gravedad = 0.2
@@ -289,39 +290,32 @@ class Juego:
         lineas_limpias = self.alto - len(nuevo_grid)
 
         if lineas_limpias > 0:
-
-            self.grid = (
-                [[0] * self.ancho for _ in range(lineas_limpias)]
-                + nuevo_grid
-            )
+            self.grid = ([[0] * self.ancho for _ in range(lineas_limpias)] + nuevo_grid)
 
         # ACTIVAR BOOST XP RANDOM
-        if random.randint(1, 100) <= 10:
+        if self.power:
+            if random.randint(1, 100) <= 10:
+                self.boost_xp = True
 
-            self.boost_xp = True
+                self.tiempo_boost = time.time()
+                self.velocidad_gravedad = 0.08
+                print (self.velocidad_gravedad)
 
-            self.tiempo_boost = time.time()
-            self.velocidad_gravedad = 0.08
-            print (self.velocidad_gravedad)
+                if self.boost_xp:
+                    print "BOOST:", self.velocidad_gravedad
 
+            # DAR PUNTOS
             if self.boost_xp:
-                print "BOOST:", self.velocidad_gravedad
+                self.puntuacion += (
+                    self.puntos_boost * lineas_limpias
+                )
 
-        # DAR PUNTOS
-        if self.boost_xp:
-
-            self.puntuacion += (
-                self.puntos_boost * lineas_limpias
-            )
-
-        else:
-
-            self.puntuacion += (
-                self.puntos_normales * lineas_limpias
-            )
+            else:
+                self.puntuacion += (
+                    self.puntos_normales * lineas_limpias
+                )
 
         for _ in range(lineas_limpias):
-
             self.ejecutar_evento('ON_LINE_CLEAR')
     
     def snake_spawn_jugador(self, accion):

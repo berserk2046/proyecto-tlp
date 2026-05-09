@@ -498,7 +498,8 @@
     "grid_size": [
       10, 
       20
-    ]
+    ], 
+    "power": 1
   }, 
   "events": {
     "ON_KEY_DOWN": [
