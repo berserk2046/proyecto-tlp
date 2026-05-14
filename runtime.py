@@ -57,7 +57,6 @@ class Juego:
         
         if self.tipo_juego == 'TETRIS':
             self.pieza_actual = None
-            self.pieza_old = 0
             self.pieza_x, self.pieza_y, self.pieza_rotacion = 0, 0, 0
             self.pieza_config = None
             self.velocidad_gravedad = 0.2
@@ -72,6 +71,7 @@ class Juego:
             self.serpiente_cuerpo = []
             self.serpiente_direccion = (1, 0)
             self.posicion_comida = None
+            self.posicion_bcomida = None
             self.velocidad_gravedad = 0.15
         
         self.timer_gravedad = 0
@@ -99,7 +99,6 @@ class Juego:
             if time.time() - self.tiempo_boost >= self.duracion_boost:
                 self.boost_xp = False
                 self.velocidad_gravedad = 0.2
-                print "BOOST XP DESACTIVADO"
 
         self.dibujar()
 
@@ -156,7 +155,7 @@ class Juego:
         if self.tipo_juego == 'TETRIS' and self.pieza_actual:
             if self.tipo_juego == 'TETRIS' and self.boost_xp:
                 COLOR_PIEZA = '#FFD700'
-            elif not self.pieza_old and self.pieza_config['color'] != None:
+            elif self.pieza_config['color'] != None:
                 COLOR_PIEZA = "#" + self.pieza_config['color']
             matriz_pieza = self.pieza_actual[self.pieza_rotacion]
             for y_offset, fila in enumerate(matriz_pieza):
@@ -180,7 +179,13 @@ class Juego:
         ts = self.taman_celda # Alias para taman de celda
         x1, y1 = x * ts, y * ts
         x2, y2 = x1 + ts, y1 + ts
-        self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline='#000000')
+        if self.serpiente_config['style'] != None:
+            if self.serpiente_config['style'] == 'CIRCLE':
+                self.canvas.create_oval(x1-1, y1-1, x2+1, y2+1, fill=color, outline='#000000')
+            elif self.serpiente_config['style'] == 'TRIANGLE':
+                self.canvas.create_polygon(x1, y1, x1, y2, x2, (y1+y2)/2, fill=color, outline='#000000')
+        else:
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline='#000000')
 
 
     def ejecutar_evento(self, nombre_evento):
@@ -189,6 +194,7 @@ class Juego:
                 verbo, objeto = accion.get('accion'), accion.get('objeto')
                 
                 if verbo == 'INCREASE_SCORE': self.puntuacion += int(objeto)
+                if verbo == 'DECREASE_SCORE': self.puntuacion -= int(objeto)
                 if verbo == 'GAME_OVER': self.juego_terminado = True
 
                 if self.tipo_juego == 'TETRIS':
@@ -201,6 +207,7 @@ class Juego:
                     if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_comida()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
                     if verbo == 'GROW': self.snake_crecer()
+                    if verbo == 'DECREASE': self.snake_decrease()
 
 
     # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
@@ -231,13 +238,8 @@ class Juego:
     def tetris_spawn_pieza(self):
         nombre_pieza = self.probabilidad_ponderada()
 
-        if 'estados' in self.datos_juego['shapes'][nombre_pieza]:
-            self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]['estados']
-            self.pieza_config = self.datos_juego['shapes'][nombre_pieza]['config']
-            self.pieza_old = 0
-        else:
-            self.pieza_old = 1
-            self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]
+        self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]['estados']
+        self.pieza_config = self.datos_juego['shapes'][nombre_pieza]['config']
 
         self.pieza_x, self.pieza_y, self.pieza_rotacion = self.ancho / 2 - 2, 0, 0
         if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
@@ -299,10 +301,6 @@ class Juego:
 
                 self.tiempo_boost = time.time()
                 self.velocidad_gravedad = 0.08
-                print (self.velocidad_gravedad)
-
-                if self.boost_xp:
-                    print "BOOST:", self.velocidad_gravedad
 
             # DAR PUNTOS
             if self.boost_xp:
@@ -321,6 +319,7 @@ class Juego:
     def snake_spawn_jugador(self, accion):
         coords = accion['params'][0] if accion['params'] else [self.ancho / 2, self.alto / 2]
         self.serpiente_cuerpo = [(coords[0], coords[1])]
+        self.serpiente_config = self.datos_juego['shapes']['PIXEL']['config']
         self.serpiente_direccion = (1, 0)
         
     def snake_spawn_comida(self):
@@ -345,11 +344,10 @@ class Juego:
             return
 
         self.serpiente_cuerpo.insert(0, nueva_cabeza)
-        
+        self.serpiente_cuerpo.pop()
+
         if nueva_cabeza == self.posicion_comida:
             self.ejecutar_evento('ON_EAT_FOOD')
-        else:
-            self.serpiente_cuerpo.pop()
 
     def snake_cambiar_direccion(self, direccion):
         if direccion == 'UP' and self.serpiente_direccion[1] != 1:
@@ -362,7 +360,10 @@ class Juego:
             self.serpiente_direccion = (1, 0)
 
     def snake_crecer(self):
-        pass
+        tail = self.serpiente_cuerpo[-1]
+        self.serpiente_cuerpo.append(tail)
+    def snake_decrease(self):
+        self.serpiente_cuerpo.pop()
 
 
     # METODOS DE SALIDA (ADAPTADOS A GUI)

@@ -1,0 +1,3 @@
+#!/bin/bash
+~/void/git/Python-2.7.18/python compiler.py games/$1.brick
+~/void/git/Python-2.7.18/python runtime.py games/$1.json

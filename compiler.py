@@ -71,30 +71,17 @@ class Parser:
         self.consumir('DEFINE')
         self.consumir('SHAPE')
         nombre_shape = self.consumir()
-        color_shape = None
-        peso = None
         self.consumir(':')
 
-        # Configuracion Shape
-        config_shape = 0
-        # Color
-        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'COLOR':
-            config_shape = 1
-            self.consumir('COLOR')
-            self.consumir(':')
-            color_shape = self.consumir()
-        # Chance
-        if self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'CHANCE':
-            config_shape = 1
-            self.consumir('CHANCE')
-            self.consumir(':')
-            peso = self.consumir()
-
-        # Asegura retrocompatibilidad al solo cambiar la estructura de el json si se encuentran variables de configuracion
-        if config_shape:
-            config = {}
-            config['color'] = color_shape
-            config['chance'] = peso
+        config = {}
+        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION']
+        for i in list_config:
+            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == i:
+                self.consumir(i)
+                self.consumir(':')
+                config[i.lower()] = self.consumir()
+            else:
+                config[i.lower()] = None
 
         estados = []
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] == 'STATE':
@@ -112,12 +99,9 @@ class Parser:
                 matriz.append(fila)
             estados.append(matriz)
         self.consumir('END')
-        if config_shape:
-            self.ast['shapes'][nombre_shape] = {}
-            self.ast['shapes'][nombre_shape]['estados'] = estados
-            self.ast['shapes'][nombre_shape]['config'] = config
-        else:
-            self.ast['shapes'][nombre_shape] = estados
+        self.ast['shapes'][nombre_shape] = {}
+        self.ast['shapes'][nombre_shape]['estados'] = estados
+        self.ast['shapes'][nombre_shape]['config'] = config
 
     # --- FUNCION CORREGIDA ---
     def parsear_evento(self):
@@ -147,7 +131,7 @@ class Parser:
                     y = int(self.consumir())
                     self.consumir(')')
                     params.append([x, y])
-            elif self.posicion < len(self.tokens) and self.tokens[self.posicion] not in ['END', 'ON', 'DEFINE', 'SPAWN', 'MOVE', 'ROTATE', 'INCREASE_SCORE', 'SET_DIRECTION', 'GROW', 'GAME_OVER']:
+            elif self.posicion < len(self.tokens) and self.tokens[self.posicion] not in ['END', 'ON', 'DEFINE', 'SPAWN', 'MOVE', 'ROTATE', 'INCREASE_SCORE', 'SET_DIRECTION', 'GROW', 'GAME_OVER', 'DECREASE_SCORE', 'DECREASE']:
                 params.append(self.consumir())
             acciones.append({'accion': verbo, 'objeto': objeto, 'params': params})
         self.consumir('END')
