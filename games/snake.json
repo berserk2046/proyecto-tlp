@@ -18,10 +18,12 @@
   }, 
   "tipo_juego": "SNAKE", 
   "config": {
+    "levels": "ENTUSIASTA", 
     "grid_size": [
       18, 
       18
-    ]
+    ], 
+    "power": null
   }, 
   "events": {
     "ON_KEY_DOWN": [
@@ -82,6 +84,15 @@
         "objeto": null
       }
     ], 
+    "ON_RAND": [
+      {
+        "params": [
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "BFOOD"
+      }
+    ], 
     "ON_START": [
       {
         "params": [
@@ -113,6 +124,20 @@
         "params": [], 
         "accion": "SET_DIRECTION", 
         "objeto": "LEFT"
+      }
+    ], 
+    "ON_EAT_BFOOD": [
+      {
+        "params": [], 
+        "accion": "DECREASE_SCORE", 
+        "objeto": "10"
+      }, 
+      {
+        "params": [
+          "1"
+        ], 
+        "accion": "DECREASE", 
+        "objeto": "PLAYER"
       }
     ]
   }

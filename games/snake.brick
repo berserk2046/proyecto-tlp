@@ -2,7 +2,7 @@
 GAME_TYPE SNAKE
 
 GAME_GRID (18, 18)
-
+LEVELS ENTUSIASTA
 # --- Definicion de Elementos ---
 DEFINE SHAPE PIXEL:
   STYLE: CIRCLE
@@ -19,6 +19,15 @@ END
 # ON_TICK es un evento que se ejecuta en cada ciclo del juego
 ON TICK:
   MOVE PLAYER FORWARD
+END
+
+ON EAT_BFOOD:
+  DECREASE_SCORE 10
+  DECREASE PLAYER 1
+END
+
+ON RAND:
+  SPAWN BFOOD AT RANDOM
 END
 
 # Evento para cuando la serpiente come

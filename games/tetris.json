@@ -73,7 +73,9 @@
       ], 
       "config": {
         "color": "090909", 
-        "chance": null
+        "collision": null, 
+        "chance": null, 
+        "style": null
       }
     }, 
     "M_PIECE": {
@@ -149,7 +151,9 @@
       ], 
       "config": {
         "color": null, 
-        "chance": null
+        "collision": null, 
+        "chance": null, 
+        "style": null
       }
     }, 
     "S_PIECE": {
@@ -225,7 +229,9 @@
       ], 
       "config": {
         "color": null, 
-        "chance": "40"
+        "collision": null, 
+        "chance": "40", 
+        "style": null
       }
     }, 
     "L_PIECE": {
@@ -301,7 +307,9 @@
       ], 
       "config": {
         "color": "099000", 
-        "chance": null
+        "collision": null, 
+        "chance": null, 
+        "style": null
       }
     }, 
     "T_PIECE": {
@@ -377,7 +385,9 @@
       ], 
       "config": {
         "color": null, 
-        "chance": null
+        "collision": null, 
+        "chance": null, 
+        "style": null
       }
     }, 
     "I_PIECE": {
@@ -489,7 +499,9 @@
       ], 
       "config": {
         "color": "099090", 
-        "chance": "40"
+        "collision": null, 
+        "chance": "40", 
+        "style": null
       }
     }, 
     "O_PIECE": {
@@ -507,7 +519,9 @@
       ], 
       "config": {
         "color": null, 
-        "chance": null
+        "collision": null, 
+        "chance": null, 
+        "style": null
       }
     }
   }, 

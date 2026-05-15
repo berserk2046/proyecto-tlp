@@ -21,6 +21,7 @@ class Juego:
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
         self.power = config.get('power', 0)
+        self.level = config.get('levels', 'BABY')
         self.puntuacion = 0
         self.juego_terminado = False
         
@@ -69,6 +70,7 @@ class Juego:
         
         if self.tipo_juego == 'SNAKE':
             self.serpiente_cuerpo = []
+            self.serpiente_config = {}
             self.serpiente_direccion = (1, 0)
             self.posicion_comida = None
             self.posicion_bcomida = None
@@ -144,6 +146,7 @@ class Juego:
         COLOR_SNAKE_CABEZA = '#00FF00' # Verde brillante
         COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
         COLOR_FOOD = '#FF0000'      # Rojo
+        COLOR_BFOOD = '#8A0BD2'
         
         # 1. Dibujar la cuadricula estatica (grid base)
         for y in range(self.alto):
@@ -169,20 +172,23 @@ class Juego:
             if self.posicion_comida:
                 x, y = self.posicion_comida
                 self.dibujar_celda(x, y, COLOR_FOOD)
+            if self.posicion_bcomida:
+                x, y = self.posicion_bcomida
+                self.dibujar_celda(x, y, COLOR_BFOOD)
             # Cuerpo de la Serpiente
             for i, segmento in enumerate(self.serpiente_cuerpo):
                 x, y = segmento
                 color = COLOR_SNAKE_CABEZA if i == 0 else COLOR_SNAKE_CUERPO
-                self.dibujar_celda(x, y, color)
+                self.dibujar_celda(x, y, color, self.serpiente_config['style'])
 
-    def dibujar_celda(self, x, y, color):
+    def dibujar_celda(self, x, y, color, style=None):
         ts = self.taman_celda # Alias para taman de celda
         x1, y1 = x * ts, y * ts
         x2, y2 = x1 + ts, y1 + ts
-        if self.serpiente_config['style'] != None:
-            if self.serpiente_config['style'] == 'CIRCLE':
+        if style != None:
+            if style == 'CIRCLE':
                 self.canvas.create_oval(x1-1, y1-1, x2+1, y2+1, fill=color, outline='#000000')
-            elif self.serpiente_config['style'] == 'TRIANGLE':
+            elif style == 'TRIANGLE':
                 self.canvas.create_polygon(x1, y1, x1, y2, x2, (y1+y2)/2, fill=color, outline='#000000')
         else:
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline='#000000')
@@ -205,6 +211,7 @@ class Juego:
                 if self.tipo_juego == 'SNAKE':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
                     if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_comida()
+                    if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
                     if verbo == 'GROW': self.snake_crecer()
                     if verbo == 'DECREASE': self.snake_decrease()
@@ -328,6 +335,13 @@ class Juego:
             if (x, y) not in self.serpiente_cuerpo:
                 self.posicion_comida = (x, y)
                 break
+
+    def snake_spawn_bcomida(self):
+        while True:
+            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
+            if (x, y) not in self.serpiente_cuerpo and (x, y) != self.posicion_comida:
+                self.posicion_bcomida = (x, y)
+                break
                 
     def snake_mover_jugador(self):
         if not self.serpiente_cuerpo: return
@@ -346,8 +360,15 @@ class Juego:
         self.serpiente_cuerpo.insert(0, nueva_cabeza)
         self.serpiente_cuerpo.pop()
 
+        if nueva_cabeza == self.posicion_bcomida:
+            self.ejecutar_evento('ON_EAT_BFOOD')
+            self.posicion_bcomida = None
+
         if nueva_cabeza == self.posicion_comida:
             self.ejecutar_evento('ON_EAT_FOOD')
+            if self.level == 'ENTUSIASTA' and random.randint(0,100) <= 50:
+                self.ejecutar_evento('ON_RAND')
+
 
     def snake_cambiar_direccion(self, direccion):
         if direccion == 'UP' and self.serpiente_direccion[1] != 1:
