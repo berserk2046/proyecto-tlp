@@ -189,13 +189,12 @@ class Juego:
             # Cuerpo de la Serpiente
             for i, segmento in enumerate(self.serpiente_cuerpo):
                 x, y = segmento
-                direction = self.serpiente_dirs[i]
                 color = COLOR_SNAKE_CABEZA if i == 0 else COLOR_SNAKE_CUERPO
                 if self.invencible:
                     color = '#FFD700'
-                self.dibujar_celda(x, y, color, self.serpiente_config['style'], direction)
+                self.dibujar_celda(x, y, color, self.serpiente_config['style'])
 
-    def dibujar_celda(self, x, y, color, style=None, direction=None):
+    def dibujar_celda(self, x, y, color, style=None):
         ts = self.taman_celda # Alias para taman de celda
         x1, y1 = x * ts, y * ts
         x2, y2 = x1 + ts, y1 + ts
@@ -203,12 +202,7 @@ class Juego:
             if style == 'CIRCLE':
                 self.canvas.create_oval(x1-1, y1-1, x2+1, y2+1, fill=color, outline='#000000')
             elif style == 'TRIANGLE':
-                if direction != None: x, y = direction
-                else: x, y = self.serpiente_direccion
-                if x == 1: self.canvas.create_polygon(x1, y1, x1, y2, x2, (y1+y2)/2, fill=color, outline='#000000')
-                elif x == -1: self.canvas.create_polygon(x1, (y1+y2)/2, x2, y1, x2, y2, fill=color, outline='#000000')
-                elif y == -1: self.canvas.create_polygon((x1+x2)/2, y1, x1, y2, x2, y2, fill=color, outline='#000000')
-                elif y == 1: self.canvas.create_polygon((x1+x2)/2, y2, x1, y1, x2, y1, fill=color, outline='#000000')
+                self.canvas.create_polygon(x1, y1, x1, y2, x2, (y1+y2)/2, fill=color, outline='#000000')
         else:
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline='#000000')
 
@@ -346,7 +340,6 @@ class Juego:
     def snake_spawn_jugador(self, accion):
         coords = accion['params'][0] if accion['params'] else [self.ancho / 2, self.alto / 2]
         self.serpiente_cuerpo = [(coords[0], coords[1])]
-        self.serpiente_dirs = [(1,0)]
         self.serpiente_config = self.datos_juego['shapes']['PIXEL']['config']
         self.serpiente_direccion = (1, 0)
         
@@ -376,7 +369,22 @@ class Juego:
         dir_x, dir_y = self.serpiente_direccion
         nueva_cabeza = (cabeza_x + dir_x, cabeza_y + dir_y)
 
-        if not self.invencible:
+        if self.invencible:
+            x, y = nueva_cabeza
+
+            if x < 0:
+                x = self.ancho - 1
+            elif x >= self.ancho:
+                x = 0
+
+            if y < 0:
+                y = self.alto - 1
+            elif y >= self.alto:
+                y = 0
+
+            nueva_cabeza = (x, y)
+
+        else:
             if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
                 self.ejecutar_evento('ON_COLLISION_WALL')
                 return
@@ -386,9 +394,7 @@ class Juego:
             return
 
         self.serpiente_cuerpo.insert(0, nueva_cabeza)
-        self.serpiente_dirs.insert(0, self.serpiente_direccion)
         self.serpiente_cuerpo.pop()
-        self.serpiente_dirs.pop()
 
         if nueva_cabeza == self.posicion_bcomida:
             self.ejecutar_evento('ON_EAT_BFOOD')
@@ -417,12 +423,11 @@ class Juego:
             self.serpiente_direccion = (1, 0)
 
     def snake_crecer(self):
-        self.serpiente_cuerpo.append(self.serpiente_cuerpo[-1])
-        self.serpiente_dirs.append(self.serpiente_dirs[-1])
+        tail = self.serpiente_cuerpo[-1]
+        self.serpiente_cuerpo.append(tail)
     def snake_decrease(self):
         if len(self.serpiente_cuerpo) > 1:
             self.serpiente_cuerpo.pop()
-            self.serpiente_dirs.pop()
 
 
     # METODOS DE SALIDA (ADAPTADOS A GUI)
