@@ -12,7 +12,7 @@
         "color": null, 
         "collision": null, 
         "chance": null, 
-        "style": "CIRCLE"
+        "style": "TRIANGLE"
       }
     }
   }, 

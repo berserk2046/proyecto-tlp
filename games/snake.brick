@@ -5,7 +5,7 @@ GAME_GRID (18, 18)
 LEVELS ENTUSIASTA
 # --- Definicion de Elementos ---
 DEFINE SHAPE PIXEL:
-  STYLE: CIRCLE
+  STYLE: TRIANGLE
   STATE 1:
     [1]
 END
