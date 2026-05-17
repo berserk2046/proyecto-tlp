@@ -29,6 +29,8 @@ class Juego:
         # -- Checkeo variables dadas por BRICK -- #
         if self.power == 'ON': self.power = 1
         else: self.power = 0
+        if self.level not in ['BABY', 'ENTUSIASTA', 'NYAN_CAT']: self.level = 'BABY'
+        print(self.level)
         
         # --- Configuracion de la GUI ---
         self.root = tk.Tk()
@@ -79,7 +81,7 @@ class Juego:
             self.posicion_comida = None
             self.posicion_bcomida = None
             self.posicion_ycomida = None
-            self.velocidad_gravedad = 0.15
+            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.052
             self.invencible = False
             self.tiempo_invencible = 0
 
@@ -195,10 +197,14 @@ class Juego:
             for i, segmento in enumerate(self.serpiente_cuerpo):
                 x, y = segmento
                 direction = self.serpiente_dirs[i]
-                color = COLOR_SNAKE_CABEZA if i == 0 else COLOR_SNAKE_CUERPO
+                style = 'CAT' if self.level == 'NYAN_CAT' and i==0 else self.serpiente_config['style']
+                if self.level == 'NYAN_CAT':
+                    color = COLOR_SNAKE_CABEZA if i == 0 else '#%02x%02x%02x' % (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+                else:
+                    color = COLOR_SNAKE_CABEZA if i == 0 else COLOR_SNAKE_CUERPO
                 if self.invencible:
                     color = '#FFD700'
-                self.dibujar_celda(x, y, color, self.serpiente_config['style'], direction)
+                self.dibujar_celda(x, y, color, style, direction)
 
     def dibujar_celda(self, x, y, color, style=None, direction=None):
         ts = self.taman_celda # Alias para taman de celda
@@ -207,6 +213,11 @@ class Juego:
         if style != None:
             if style == 'CIRCLE':
                 self.canvas.create_oval(x1-1, y1-1, x2+1, y2+1, fill=color, outline='#000000')
+            if style == 'CAT':
+                self.canvas.create_oval(x1-ts/8, y1+ts/9, x2+ts/8, y2-0.1, fill="#adadad", outline='#000000')
+                self.canvas.create_polygon(x1, y1-ts/3, x1, y1+7, x2-(ts/4)-5, y1+7, fill="#adadad", outline="#adadad")
+                self.canvas.create_polygon(x2, y1-ts/3, x1+(ts/4)+5, y1+7, x2, y1+7, fill="#adadad", outline="#adadad")
+
             elif style == 'TRIANGLE':
                 if direction != None: x, y = direction
                 else: x, y = self.serpiente_direccion

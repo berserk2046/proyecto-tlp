@@ -12,13 +12,13 @@
         "color": null, 
         "collision": null, 
         "chance": null, 
-        "style": "TRIANGLE"
+        "style": "CIRCLE"
       }
     }
   }, 
   "tipo_juego": "SNAKE", 
   "config": {
-    "levels": "ENTUSIASTA", 
+    "levels": "NYAN_CAT", 
     "grid_size": [
       18, 
       18
