@@ -18,7 +18,7 @@
   }, 
   "tipo_juego": "SNAKE", 
   "config": {
-    "levels": "NYAN_CAT", 
+    "levels": "ENTUSIASTA", 
     "grid_size": [
       18, 
       18
@@ -50,11 +50,9 @@
         "objeto": "10"
       }, 
       {
-        "params": [
-          "1"
-        ], 
+        "params": [], 
         "accion": "GROW", 
-        "objeto": "PLAYER"
+        "objeto": "1"
       }, 
       {
         "params": [
@@ -101,11 +99,9 @@
         "objeto": "50"
       }, 
       {
-        "params": [
-          "2"
-        ], 
+        "params": [], 
         "accion": "GROW", 
-        "objeto": "PLAYER"
+        "objeto": "2"
       }
     ], 
     "ON_START": [
@@ -136,6 +132,18 @@
         "objeto": "YFOOD"
       }
     ], 
+    "ON_COLLISION_WALL_NYAN": [
+      {
+        "params": [], 
+        "accion": "SET_SCORE", 
+        "objeto": "0"
+      }, 
+      {
+        "params": [], 
+        "accion": "DECREASE", 
+        "objeto": "ALL"
+      }
+    ], 
     "ON_KEY_UP": [
       {
         "params": [], 
@@ -157,11 +165,9 @@
         "objeto": "10"
       }, 
       {
-        "params": [
-          "1"
-        ], 
+        "params": [], 
         "accion": "DECREASE", 
-        "objeto": "PLAYER"
+        "objeto": "1"
       }
     ]
   }

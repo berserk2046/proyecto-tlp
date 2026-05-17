@@ -30,7 +30,6 @@ class Juego:
         if self.power == 'ON': self.power = 1
         else: self.power = 0
         if self.level not in ['BABY', 'ENTUSIASTA', 'NYAN_CAT']: self.level = 'BABY'
-        print(self.level)
         
         # --- Configuracion de la GUI ---
         self.root = tk.Tk()
@@ -81,7 +80,7 @@ class Juego:
             self.posicion_comida = None
             self.posicion_bcomida = None
             self.posicion_ycomida = None
-            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.052
+            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.05
             self.invencible = False
             self.tiempo_invencible = 0
 
@@ -236,6 +235,7 @@ class Juego:
                 
                 if verbo == 'INCREASE_SCORE': self.puntuacion += int(objeto)
                 if verbo == 'DECREASE_SCORE': self.puntuacion -= int(objeto)
+                if verbo == 'SET_SCORE': self.puntuacion = int(objeto)
                 if verbo == 'GAME_OVER': self.juego_terminado = True
 
                 if self.tipo_juego == 'TETRIS':
@@ -249,8 +249,8 @@ class Juego:
                     if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
                     if verbo == 'SPAWN' and objeto == 'YFOOD': self.snake_spawn_ycomida()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
-                    if verbo == 'GROW': self.snake_crecer()
-                    if verbo == 'DECREASE': self.snake_decrease()
+                    if verbo == 'GROW': self.snake_crecer(objeto)
+                    if verbo == 'DECREASE': self.snake_decrease(objeto)
 
 
     # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
@@ -405,8 +405,12 @@ class Juego:
             nueva_cabeza = (x, y)
         else:
             if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
-                self.ejecutar_evento('ON_COLLISION_WALL')
-                return
+                if self.level == 'NYAN_CAT' and self.puntuacion > 0:
+                    self.ejecutar_evento('ON_COLLISION_WALL_NYAN')
+                    self.serpiente_direccion = (dir_x*-1, dir_y*-1)
+                else:
+                    self.ejecutar_evento('ON_COLLISION_WALL')
+                    return
 
         if not self.invencible and nueva_cabeza in self.serpiente_cuerpo[:-1]:
             self.ejecutar_evento('ON_COLLISION_SELF')
@@ -443,13 +447,23 @@ class Juego:
         elif direccion == 'RIGHT' and self.serpiente_direccion[0] != -1:
             self.serpiente_direccion = (1, 0)
 
-    def snake_crecer(self):
-        self.serpiente_cuerpo.append(self.serpiente_cuerpo[-1])
-        self.serpiente_dirs.append(self.serpiente_dirs[-1])
-    def snake_decrease(self):
-        if len(self.serpiente_cuerpo) > 1:
-            self.serpiente_cuerpo.pop()
-            self.serpiente_dirs.pop()
+    def snake_crecer(self, objeto):
+        for i in range(int(objeto)):
+            self.serpiente_cuerpo.append(self.serpiente_cuerpo[-1])
+            self.serpiente_dirs.append(self.serpiente_dirs[-1])
+
+    def snake_decrease(self, objeto):
+        if objeto == 'ALL':
+            del self.serpiente_cuerpo[1:]
+            del self.serpiente_dirs[1:]
+        else:
+            for i in range(int(objeto)):
+                if len(self.serpiente_cuerpo) > 1:
+                    self.serpiente_cuerpo.pop()
+                    self.serpiente_dirs.pop()
+                else:
+                    self.ejecutar_evento('ON_COLLISION_WALL')
+                    break
 
 
     # METODOS DE SALIDA (ADAPTADOS A GUI)
