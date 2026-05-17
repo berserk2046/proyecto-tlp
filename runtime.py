@@ -74,7 +74,11 @@ class Juego:
             self.serpiente_direccion = (1, 0)
             self.posicion_comida = None
             self.posicion_bcomida = None
+            self.posicion_ycomida = None
             self.velocidad_gravedad = 0.15
+            self.invencible = False
+            self.tiempo_invencible = 0
+            self.duracion_invencible = 5
         
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
@@ -101,6 +105,9 @@ class Juego:
             if time.time() - self.tiempo_boost >= self.duracion_boost:
                 self.boost_xp = False
                 self.velocidad_gravedad = 0.2
+        if self.tipo_juego == 'SNAKE' and self.invencible:
+            if time.time() - self.tiempo_invencible >= self.duracion_invencible:
+                self.invencible = False
 
         self.dibujar()
 
@@ -147,6 +154,7 @@ class Juego:
         COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
         COLOR_FOOD = '#FF0000'      # Rojo
         COLOR_BFOOD = '#8A0BD2'
+        COLOR_PFOOD = '#FFD700'
         
         # 1. Dibujar la cuadricula estatica (grid base)
         for y in range(self.alto):
@@ -175,11 +183,16 @@ class Juego:
             if self.posicion_bcomida:
                 x, y = self.posicion_bcomida
                 self.dibujar_celda(x, y, COLOR_BFOOD)
+            if self.posicion_ycomida:
+                x, y = self.posicion_ycomida
+                self.dibujar_celda(x, y, COLOR_PFOOD)
             # Cuerpo de la Serpiente
             for i, segmento in enumerate(self.serpiente_cuerpo):
                 x, y = segmento
                 direction = self.serpiente_dirs[i]
                 color = COLOR_SNAKE_CABEZA if i == 0 else COLOR_SNAKE_CUERPO
+                if self.invencible:
+                    color = '#FFD700'
                 self.dibujar_celda(x, y, color, self.serpiente_config['style'], direction)
 
     def dibujar_celda(self, x, y, color, style=None, direction=None):
@@ -218,6 +231,7 @@ class Juego:
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
                     if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_comida()
                     if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
+                    if verbo == 'SPAWN' and objeto == 'YFOOD': self.snake_spawn_ycomida()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
                     if verbo == 'GROW': self.snake_crecer()
                     if verbo == 'DECREASE': self.snake_decrease()
@@ -349,6 +363,12 @@ class Juego:
             if (x, y) not in self.serpiente_cuerpo and (x, y) != self.posicion_comida:
                 self.posicion_bcomida = (x, y)
                 break
+    def snake_spawn_ycomida(self):
+        while True:
+            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
+            if (x, y) not in self.serpiente_cuerpo and (x, y) != self.posicion_comida and (x, y) != self.posicion_bcomida:
+                self.posicion_ycomida = (x, y)
+                break
                 
     def snake_mover_jugador(self):
         if not self.serpiente_cuerpo: return
@@ -356,11 +376,12 @@ class Juego:
         dir_x, dir_y = self.serpiente_direccion
         nueva_cabeza = (cabeza_x + dir_x, cabeza_y + dir_y)
 
-        if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
-            self.ejecutar_evento('ON_COLLISION_WALL')
-            return
-            
-        if nueva_cabeza in self.serpiente_cuerpo[:-1]:
+        if not self.invencible:
+            if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
+                self.ejecutar_evento('ON_COLLISION_WALL')
+                return
+
+        if not self.invencible and nueva_cabeza in self.serpiente_cuerpo[:-1]:
             self.ejecutar_evento('ON_COLLISION_SELF')
             return
 
@@ -372,6 +393,12 @@ class Juego:
         if nueva_cabeza == self.posicion_bcomida:
             self.ejecutar_evento('ON_EAT_BFOOD')
             self.posicion_bcomida = None
+
+        if nueva_cabeza == self.posicion_ycomida:
+            self.ejecutar_evento('ON_EAT_YFOOD')
+            self.posicion_ycomida = None
+            self.invencible = True
+            self.tiempo_invencible = time.time()
 
         if nueva_cabeza == self.posicion_comida:
             self.ejecutar_evento('ON_EAT_FOOD')
@@ -393,8 +420,9 @@ class Juego:
         self.serpiente_cuerpo.append(self.serpiente_cuerpo[-1])
         self.serpiente_dirs.append(self.serpiente_dirs[-1])
     def snake_decrease(self):
-        self.serpiente_cuerpo.pop()
-        self.serpiente_dirs.pop()
+        if len(self.serpiente_cuerpo) > 1:
+            self.serpiente_cuerpo.pop()
+            self.serpiente_dirs.pop()
 
 
     # METODOS DE SALIDA (ADAPTADOS A GUI)
