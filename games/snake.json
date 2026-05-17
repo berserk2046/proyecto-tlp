@@ -23,7 +23,8 @@
       18, 
       18
     ], 
-    "power": null
+    "power": "ON", 
+    "power_time": "2"
   }, 
   "events": {
     "ON_KEY_DOWN": [
@@ -31,6 +32,15 @@
         "params": [], 
         "accion": "SET_DIRECTION", 
         "objeto": "DOWN"
+      }
+    ], 
+    "ON_DIFD": [
+      {
+        "params": [
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "BFOOD"
       }
     ], 
     "ON_EAT_FOOD": [
@@ -84,13 +94,18 @@
         "objeto": null
       }
     ], 
-    "ON_RAND": [
+    "ON_EAT_YFOOD": [
+      {
+        "params": [], 
+        "accion": "INCREASE_SCORE", 
+        "objeto": "50"
+      }, 
       {
         "params": [
-          "RANDOM"
+          "2"
         ], 
-        "accion": "SPAWN", 
-        "objeto": "BFOOD"
+        "accion": "GROW", 
+        "objeto": "PLAYER"
       }
     ], 
     "ON_START": [
@@ -110,6 +125,15 @@
         ], 
         "accion": "SPAWN", 
         "objeto": "FOOD"
+      }
+    ], 
+    "ON_POWERUP": [
+      {
+        "params": [
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "YFOOD"
       }
     ], 
     "ON_KEY_UP": [

@@ -527,11 +527,13 @@
   }, 
   "tipo_juego": "TETRIS", 
   "config": {
+    "levels": null, 
     "grid_size": [
       10, 
       20
     ], 
-    "power": 1
+    "power": "NO", 
+    "time": null
   }, 
   "events": {
     "ON_KEY_DOWN": [

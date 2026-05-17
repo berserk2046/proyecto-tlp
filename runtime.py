@@ -21,9 +21,14 @@ class Juego:
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
         self.power = config.get('power', 0)
+        self.duracion_poder = int(config.get('power_time', 0))
         self.level = config.get('levels', 'BABY')
         self.puntuacion = 0
         self.juego_terminado = False
+
+        # -- Checkeo variables dadas por BRICK -- #
+        if self.power == 'ON': self.power = 1
+        else: self.power = 0
         
         # --- Configuracion de la GUI ---
         self.root = tk.Tk()
@@ -64,7 +69,6 @@ class Juego:
             # BOOST XP
             self.boost_xp = False
             self.tiempo_boost = 0
-            self.duracion_boost = 7
             self.puntos_normales = 100
             self.puntos_boost = 300
         
@@ -78,7 +82,8 @@ class Juego:
             self.velocidad_gravedad = 0.15
             self.invencible = False
             self.tiempo_invencible = 0
-            self.duracion_invencible = 5
+
+
         
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
@@ -102,11 +107,11 @@ class Juego:
             self.ejecutar_evento('ON_TICK')
         # DESACTIVAR BOOST XP
         if self.tipo_juego == 'TETRIS' and self.power and self.boost_xp:
-            if time.time() - self.tiempo_boost >= self.duracion_boost:
+            if time.time() - self.tiempo_boost >= self.duracion_poder:
                 self.boost_xp = False
                 self.velocidad_gravedad = 0.2
-        if self.tipo_juego == 'SNAKE' and self.invencible:
-            if time.time() - self.tiempo_invencible >= self.duracion_invencible:
+        if self.tipo_juego == 'SNAKE' and self.invencible and self.power:
+            if time.time() - self.tiempo_invencible >= self.duracion_poder:
                 self.invencible = False
 
         self.dibujar()
@@ -376,7 +381,18 @@ class Juego:
         dir_x, dir_y = self.serpiente_direccion
         nueva_cabeza = (cabeza_x + dir_x, cabeza_y + dir_y)
 
-        if not self.invencible:
+        if self.invencible:
+            x, y = nueva_cabeza
+            if x < 0:
+                x = self.ancho - 1
+            elif x >= self.ancho:
+                x = 0
+            if y < 0:
+                y = self.alto - 1
+            elif y >= self.alto:
+                y = 0
+            nueva_cabeza = (x, y)
+        else:
             if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
                 self.ejecutar_evento('ON_COLLISION_WALL')
                 return
@@ -403,8 +419,8 @@ class Juego:
         if nueva_cabeza == self.posicion_comida:
             self.ejecutar_evento('ON_EAT_FOOD')
             if self.level == 'ENTUSIASTA' and random.randint(0,100) <= 50:
-                self.ejecutar_evento('ON_RAND')
-
+                self.ejecutar_evento('ON_DIFD')
+                if random.randint(0,100) <= 100 and self.power: self.ejecutar_evento('ON_POWERUP')
 
     def snake_cambiar_direccion(self, direccion):
         if direccion == 'UP' and self.serpiente_direccion[1] != 1:

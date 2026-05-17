@@ -2,7 +2,8 @@
 GAME_TYPE TETRIS
 
 GAME_GRID (10, 20)
-POWER ON
+POWER NO
+POWER_TIME 10
 
 # --- Definicion de las Piezas ---
 DEFINE SHAPE I_PIECE:

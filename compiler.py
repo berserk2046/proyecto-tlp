@@ -61,13 +61,12 @@ class Parser:
         alto = int(self.consumir())
         self.consumir(')')
         self.ast['config']['grid_size'] = [ancho, alto]
-        list_config = ['POWER', 'LEVELS']
+        list_config = ['POWER', 'LEVELS', 'POWER_TIME']
         for i in list_config:
-            if self.posicion < len(self.tokens) and self.tokens[self.posicion] == i:
-                self.consumir(i)
-                self.ast['config'][i.lower()] = self.consumir()
-            else:
-                self.ast['config'][i.lower()] = None
+            self.ast['config'][i.lower()] = None
+        while self.posicion < len(self.tokens) and self.tokens[self.posicion] in list_config:
+            key = self.consumir()
+            self.ast['config'][key.lower()] = self.consumir()
 
     def parsear_shape(self):
         self.consumir('DEFINE')
