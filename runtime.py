@@ -427,7 +427,10 @@ class Juego:
                     self.ejecutar_evento('ON_COLLISION_WALL')
                     return
         if self.level == 'NYAN_CAT' and nueva_cabeza in self.obstaculos:
-            self.ejecutar_evento('ON_COLLISION_WALL')
+            if self.puntuacion > 0:
+                self.puntuacion = 0
+            else:
+                self.juego_terminado = True
             return
         if not self.invencible and nueva_cabeza in self.serpiente_cuerpo[:-1]:
             self.ejecutar_evento('ON_COLLISION_SELF')
