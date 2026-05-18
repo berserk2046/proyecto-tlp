@@ -84,6 +84,8 @@ class Juego:
             self.invencible = False
             self.tiempo_invencible = 0
             self.obstaculos = []
+            self.invulnerable_obstaculo = False
+            self.tiempo_obstaculo = 0
 
 
         
@@ -115,6 +117,9 @@ class Juego:
         if self.tipo_juego == 'SNAKE' and self.invencible and self.power:
             if time.time() - self.tiempo_invencible >= self.duracion_poder:
                 self.invencible = False
+        if self.tipo_juego == 'SNAKE' and self.invulnerable_obstaculo:
+            if time.time() - self.tiempo_obstaculo >= 2:
+                self.invulnerable_obstaculo = False
 
         self.dibujar()
 
@@ -427,10 +432,13 @@ class Juego:
                     self.ejecutar_evento('ON_COLLISION_WALL')
                     return
         if self.level == 'NYAN_CAT' and nueva_cabeza in self.obstaculos:
-            if self.puntuacion > 0:
-                self.puntuacion = 0
-            else:
-                self.juego_terminado = True
+            if not self.invulnerable_obstaculo:
+                if self.puntuacion > 0:
+                    self.puntuacion = 0
+                    self.invulnerable_obstaculo = True
+                    self.tiempo_obstaculo = time.time()
+                else:
+                    self.juego_terminado = True
             return
         if not self.invencible and nueva_cabeza in self.serpiente_cuerpo[:-1]:
             self.ejecutar_evento('ON_COLLISION_SELF')
