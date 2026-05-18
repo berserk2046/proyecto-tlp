@@ -83,6 +83,7 @@ class Juego:
             self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.05
             self.invencible = False
             self.tiempo_invencible = 0
+            self.obstaculos = []
 
 
         
@@ -183,6 +184,9 @@ class Juego:
         # 3. Dibujar Snake y Comida
         if self.tipo_juego == 'SNAKE':
             # Comida
+            if self.level == 'NYAN_CAT':
+                for x, y in self.obstaculos:
+                    self.dibujar_celda(x, y, '#777777')
             if self.posicion_comida:
                 x, y = self.posicion_comida
                 self.dibujar_celda(x, y, COLOR_FOOD)
@@ -365,7 +369,18 @@ class Juego:
         self.serpiente_dirs = [(1,0)]
         self.serpiente_config = self.datos_juego['shapes']['PIXEL']['config']
         self.serpiente_direccion = (1, 0)
-        
+        if self.level == 'NYAN_CAT':
+            self.generar_obstaculos()
+
+    def generar_obstaculos(self):
+        self.obstaculos = []
+        for i in range(8):
+            x = random.randint(2, self.ancho - 3)
+            y = random.randint(2, self.alto - 3)
+
+            if (x, y) not in self.serpiente_cuerpo:
+                self.obstaculos.append((x, y))    
+
     def snake_spawn_comida(self):
         while True:
             x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
@@ -411,7 +426,9 @@ class Juego:
                 else:
                     self.ejecutar_evento('ON_COLLISION_WALL')
                     return
-
+        if self.level == 'NYAN_CAT' and nueva_cabeza in self.obstaculos:
+            self.ejecutar_evento('ON_COLLISION_WALL')
+            return
         if not self.invencible and nueva_cabeza in self.serpiente_cuerpo[:-1]:
             self.ejecutar_evento('ON_COLLISION_SELF')
             return
