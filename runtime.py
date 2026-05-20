@@ -21,7 +21,7 @@ class Juego:
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
         self.power = config.get('power', 0)
-        self.duracion_poder = int(config.get('power_time', 0))
+        self.duracion_poder = config.get('power_time', 0)
         self.level = config.get('levels', 'BABY')
         self.puntuacion = 0
         self.juego_terminado = False
@@ -30,6 +30,7 @@ class Juego:
         if self.power == 'ON': self.power = 1
         else: self.power = 0
         if self.level not in ['BABY', 'ENTUSIASTA', 'NYAN_CAT']: self.level = 'BABY'
+        if self.duracion_poder != None: self.duracion_poder = int(self.duracion_poder)
         
         # --- Configuracion de la GUI ---
         self.root = tk.Tk()
@@ -240,7 +241,7 @@ class Juego:
     def ejecutar_evento(self, nombre_evento):
         if nombre_evento in self.datos_juego['events']:
             for accion in self.datos_juego['events'][nombre_evento]:
-                verbo, objeto = accion.get('accion'), accion.get('objeto')
+                verbo, objeto, param = accion.get('accion'), accion.get('objeto'), accion.get('params')
                 
                 if verbo == 'INCREASE_SCORE': self.puntuacion += int(objeto)
                 if verbo == 'DECREASE_SCORE': self.puntuacion -= int(objeto)
@@ -258,8 +259,8 @@ class Juego:
                     if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
                     if verbo == 'SPAWN' and objeto == 'YFOOD': self.snake_spawn_ycomida()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
-                    if verbo == 'GROW': self.snake_crecer(objeto)
-                    if verbo == 'DECREASE': self.snake_decrease(objeto)
+                    if verbo == 'GROW': self.snake_crecer(param[0])
+                    if verbo == 'DECREASE': self.snake_decrease(param[0])
 
 
     # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
@@ -383,7 +384,7 @@ class Juego:
             x = random.randint(2, self.ancho - 3)
             y = random.randint(2, self.alto - 3)
 
-            if (x, y) not in self.serpiente_cuerpo:
+            if (x, y) not in self.serpiente_cuerpo and (x,y) != self.posicion_comida:
                 self.obstaculos.append((x, y))    
 
     def snake_spawn_comida(self):
@@ -431,10 +432,10 @@ class Juego:
                 else:
                     self.ejecutar_evento('ON_COLLISION_WALL')
                     return
-        if self.level == 'NYAN_CAT' and nueva_cabeza in self.obstaculos:
+        if nueva_cabeza in self.obstaculos:
             if not self.invulnerable_obstaculo:
                 if self.puntuacion > 0:
-                    self.puntuacion = 0
+                    self.ejecutar_evento('ON_COLLISION_WALL_NYAN')
                     self.invulnerable_obstaculo = True
                     self.tiempo_obstaculo = time.time()
                 else:
