@@ -122,6 +122,13 @@ class Juego:
             if time.time() - self.tiempo_obstaculo >= 2:
                 self.invulnerable_obstaculo = False
 
+        if self.puntuacion > 0 and self.puntuacion < 40: self.level = 'BABY'
+        if self.puntuacion > 40 and self.puntuacion < 200: self.level = 'ENTUSIASTA'
+        if self.puntuacion > 200:
+            if not self.obstaculos: self.generar_obstaculos()
+            self.level = 'NYAN_CAT'
+            self.velocidad_gravedad = 0.005
+
         self.dibujar()
 
         # Programa el siguiente ciclo de juego
