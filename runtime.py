@@ -88,8 +88,13 @@ class Juego:
             self.invulnerable_obstaculo = False
             self.tiempo_obstaculo = 0
 
+        if self.tipo_juego == 'TANK':
+            self.player_tank = []
+            self.posd = {}
+            self.bullets = {}
+            self.velocidad_gravedad = 0.2
 
-        
+
         self.timer_gravedad = 0
         self.ejecutar_evento('ON_START')
         self.timer_id = None # Para controlar el loop de Tkinter
@@ -110,6 +115,8 @@ class Juego:
         if self.timer_gravedad >= self.velocidad_gravedad:
             self.timer_gravedad = 0
             self.ejecutar_evento('ON_TICK')
+
+        self.bullet_logic()
         # DESACTIVAR BOOST XP
         if self.tipo_juego == 'TETRIS' and self.power and self.boost_xp:
             if time.time() - self.tiempo_boost >= self.duracion_poder:
@@ -121,13 +128,6 @@ class Juego:
         if self.tipo_juego == 'SNAKE' and self.invulnerable_obstaculo:
             if time.time() - self.tiempo_obstaculo >= 2:
                 self.invulnerable_obstaculo = False
-
-        if self.puntuacion > 0 and self.puntuacion < 40: self.level = 'BABY'
-        if self.puntuacion > 40 and self.puntuacion < 200: self.level = 'ENTUSIASTA'
-        if self.puntuacion > 200:
-            if not self.obstaculos: self.generar_obstaculos()
-            self.level = 'NYAN_CAT'
-            self.velocidad_gravedad = 0.005
 
         self.dibujar()
 
@@ -146,20 +146,11 @@ class Juego:
         key = event.keysym.upper()
         
         # La opcion de salir con 'Q' ha sido eliminada.
-        
-        # Mapeo de teclas de flecha
-        if self.tipo_juego == 'TETRIS':
-            if key == 'UP': self.ejecutar_evento('ON_KEY_UP')
-            elif key == 'DOWN': self.ejecutar_evento('ON_KEY_DOWN')
-            elif key == 'LEFT': self.ejecutar_evento('ON_KEY_LEFT')
-            elif key == 'RIGHT': self.ejecutar_evento('ON_KEY_RIGHT')
-        elif self.tipo_juego == 'SNAKE':
-            # Llamamos a las funciones internas para Snake
-            if key == 'UP': self.snake_cambiar_direccion('UP')
-            elif key == 'DOWN': self.snake_cambiar_direccion('DOWN')
-            elif key == 'LEFT': self.snake_cambiar_direccion('LEFT')
-            elif key == 'RIGHT': self.snake_cambiar_direccion('RIGHT')
-
+        if key == 'UP': self.ejecutar_evento('ON_KEY_UP')
+        elif key == 'DOWN': self.ejecutar_evento('ON_KEY_DOWN')
+        elif key == 'LEFT': self.ejecutar_evento('ON_KEY_LEFT')
+        elif key == 'RIGHT': self.ejecutar_evento('ON_KEY_RIGHT')
+        elif self.tipo_juego == 'TANK' and key == "RETURN": self.ejecutar_evento('ON_KEY_ENTER')
 
     def dibujar(self):
         self.canvas.delete("all") # Borrar todo en cada frame
@@ -184,7 +175,7 @@ class Juego:
 
         # 2. Dibujar la pieza actual de Tetris
         if self.tipo_juego == 'TETRIS' and self.pieza_actual:
-            if self.tipo_juego == 'TETRIS' and self.boost_xp:
+            if self.boost_xp:
                 COLOR_PIEZA = '#FFD700'
             elif self.pieza_config['color'] != None:
                 COLOR_PIEZA = "#" + self.pieza_config['color']
@@ -193,7 +184,18 @@ class Juego:
                 for x_offset, celda in enumerate(fila):
                     if celda == 1:
                         self.dibujar_celda(self.pieza_x + x_offset, self.pieza_y + y_offset, COLOR_PIEZA)
-        
+
+        if self.tipo_juego == 'TANK':
+            matriz_pieza = self.player_tank[0]
+            for y_offset, fila in enumerate(matriz_pieza):
+                for x_offset, celda in enumerate(fila):
+                    if celda == 1:
+                        self.dibujar_celda(self.posd['pos'][0] + x_offset, self.posd['pos'][1]+ y_offset, COLOR_PIEZA)
+            if self.bullets:
+                for i in self.bullets:
+                    self.dibujar_celda(self.bullets[i]['pos'][0], self.bullets[i]['pos'][1], COLOR_FOOD)
+
+
         # 3. Dibujar Snake y Comida
         if self.tipo_juego == 'SNAKE':
             # Comida
@@ -257,8 +259,13 @@ class Juego:
 
                 if self.tipo_juego == 'TETRIS':
                     if verbo == 'SPAWN': self.tetris_spawn_pieza()
-                    if verbo == 'MOVE': self.tetris_mover_pieza(accion['params'][0])
+                    if verbo == 'MOVE': self.mover_pieza(param[0])
                     if verbo == 'ROTATE': self.tetris_rotar_pieza()
+
+                if self.tipo_juego == 'TANK':
+                    if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_player(param)
+                    if verbo == 'SPAWN' and objeto == 'BULLET': self.spawn_tank_bullet()
+                    if verbo == 'MOVE' and objeto == 'PLAYER': self.mover_pieza(param[0])
                 
                 if self.tipo_juego == 'SNAKE':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
@@ -266,6 +273,7 @@ class Juego:
                     if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
                     if verbo == 'SPAWN' and objeto == 'YFOOD': self.snake_spawn_ycomida()
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
+                    if verbo == 'SET_DIRECTION': self.mover_pieza(objeto)
                     if verbo == 'GROW': self.snake_crecer(param[0])
                     if verbo == 'DECREASE': self.snake_decrease(param[0])
 
@@ -295,6 +303,27 @@ class Juego:
             choice = lista[key]
         return None
 
+    def spawn_player(self, param):
+        pieza = self.datos_juego['shapes']['PLAYER_TANK']['estados']
+        if self.tipo_juego == 'TANK':
+            self.player_tank = pieza
+            self.posd = {'pos': param[0], 'dir': (0,0)}
+
+    def spawn_tank_bullet(self):
+        self.bullets[str(len(self.bullets.keys()))] = {'pos': list(self.posd['pos']), 'dir': list(self.posd['dir'])}
+
+    def bullet_logic(self):
+        if not self.bullets: return
+        d = []
+        for i in self.bullets:
+            if self.bullets[i]['pos'][0] < 0 or self.bullets[i]['pos'][0] > self.ancho: d.append(i)
+            elif self.bullets[i]['pos'][1] < 0 or self.bullets[i]['pos'][1] > self.alto: d.append(i)
+            else:
+                self.bullets[i]['pos'][0] += self.bullets[i]['dir'][0]
+                self.bullets[i]['pos'][1] += self.bullets[i]['dir'][1]
+        for i in d: self.bullets.pop(i)
+        
+
     def tetris_spawn_pieza(self):
         nombre_pieza = self.probabilidad_ponderada()
 
@@ -305,17 +334,26 @@ class Juego:
         if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
             self.juego_terminado = True
 
-    def tetris_mover_pieza(self, direccion):
-        if not self.pieza_actual: return
-        dx, dy = 0, 0
-        if direccion == 'LEFT': dx = -1
-        elif direccion == 'RIGHT': dx = 1
-        elif direccion == 'DOWN': dy = 1
-        if not self.tetris_verificar_colision(self.pieza_x + dx, self.pieza_y + dy, self.pieza_rotacion):
-            self.pieza_x += dx
-            self.pieza_y += dy
-        elif dy > 0:
-            self.tetris_fijar_pieza()
+    def mover_pieza(self, direccion):
+        if self.tipo_juego == 'TETRIS' and not self.pieza_actual: return
+        dire = (0, 0)
+        if direccion == 'UP': dire = (0, -1)
+        if direccion == 'DOWN': dire = (0, 1)
+        if direccion == 'LEFT': dire = (-1, 0)
+        if direccion == 'RIGHT': dire = (1, 0)
+
+        if self.tipo_juego == 'TETRIS' and not self.tetris_verificar_colision(self.pieza_x + dire[0], self.pieza_y + dire[1], self.pieza_rotacion):
+            self.pieza_x += dire[0]
+            self.pieza_y += dire[1]
+        elif self.tipo_juego == 'TETRIS' and dire[1] > 0:
+            self.tetris_fijar_pieza()       
+
+        if self.tipo_juego == 'TANK':
+            self.posd['pos'][0] += dire[0]
+            self.posd['pos'][1] += dire[1]
+            self.posd['dir'] = dire
+
+        if self.tipo_juego == 'SNAKE': self.serpiente_direccion = dire
 
     def tetris_rotar_pieza(self):
         if not self.pieza_actual: return
@@ -472,16 +510,6 @@ class Juego:
             if self.level == 'ENTUSIASTA' and random.randint(0,100) <= 50:
                 self.ejecutar_evento('ON_DIFD')
                 if random.randint(0,100) <= 100 and self.power: self.ejecutar_evento('ON_POWERUP')
-
-    def snake_cambiar_direccion(self, direccion):
-        if direccion == 'UP' and self.serpiente_direccion[1] != 1:
-            self.serpiente_direccion = (0, -1)
-        elif direccion == 'DOWN' and self.serpiente_direccion[1] != -1:
-            self.serpiente_direccion = (0, 1)
-        elif direccion == 'LEFT' and self.serpiente_direccion[0] != 1:
-            self.serpiente_direccion = (-1, 0)
-        elif direccion == 'RIGHT' and self.serpiente_direccion[0] != -1:
-            self.serpiente_direccion = (1, 0)
 
     def snake_crecer(self, objeto):
         for i in range(int(objeto)):

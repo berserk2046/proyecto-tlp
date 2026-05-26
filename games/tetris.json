@@ -533,7 +533,7 @@
       20
     ], 
     "power": "NO", 
-    "time": null
+    "power_time": "10"
   }, 
   "events": {
     "ON_KEY_DOWN": [

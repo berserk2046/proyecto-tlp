@@ -1,0 +1,91 @@
+{
+  "shapes": {
+    "PLAYER_TANK": {
+      "estados": [
+        [
+          [
+            1, 
+            1
+          ], 
+          [
+            1, 
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "color": null, 
+        "collision": null, 
+        "chance": null, 
+        "style": null
+      }
+    }
+  }, 
+  "tipo_juego": "TANK", 
+  "config": {
+    "levels": null, 
+    "grid_size": [
+      30, 
+      30
+    ], 
+    "power": null, 
+    "power_time": null
+  }, 
+  "events": {
+    "ON_KEY_ENTER": [
+      {
+        "params": [], 
+        "accion": "SPAWN", 
+        "objeto": "BULLET"
+      }
+    ], 
+    "ON_KEY_DOWN": [
+      {
+        "params": [
+          "DOWN"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "PLAYER"
+      }
+    ], 
+    "ON_KEY_UP": [
+      {
+        "params": [
+          "UP"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "PLAYER"
+      }
+    ], 
+    "ON_START": [
+      {
+        "params": [
+          [
+            15, 
+            15
+          ]
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "PLAYER"
+      }
+    ], 
+    "ON_KEY_RIGHT": [
+      {
+        "params": [
+          "RIGHT"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "PLAYER"
+      }
+    ], 
+    "ON_KEY_LEFT": [
+      {
+        "params": [
+          "LEFT"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "PLAYER"
+      }
+    ]
+  }
+}
