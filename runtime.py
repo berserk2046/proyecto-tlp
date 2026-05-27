@@ -90,12 +90,14 @@ class Juego:
 
         if self.tipo_juego == 'TANK':
             self.player_tank = []
+            self.enemy_tank = {'cuerpo': self.datos_juego['shapes']['ENEMY']['estados'], 'pos': [], 'dir': [], 'hp': []}
             self.posd = {}
             self.bullets = {}
-            self.velocidad_gravedad = 0.2
+            self.velocidad_gravedad = 0.5
 
 
         self.timer_gravedad = 0
+        self.timer_random_events = 0
         self.ejecutar_evento('ON_START')
         self.timer_id = None # Para controlar el loop de Tkinter
 
@@ -115,8 +117,15 @@ class Juego:
         if self.timer_gravedad >= self.velocidad_gravedad:
             self.timer_gravedad = 0
             self.ejecutar_evento('ON_TICK')
+            if self.tipo_juego == 'TANK': self.enemy_movement()
 
-        self.bullet_logic()
+        if self.tipo_juego == 'TANK':
+            self.timer_random_events += 0.06
+            if self.timer_random_events >= self.velocidad_gravedad:
+                if random.randint(0,100) <= 2: self.ejecutar_evento('ON_RANDOM')
+
+            self.bullet_logic()
+            self.enemy_dead()
         # DESACTIVAR BOOST XP
         if self.tipo_juego == 'TETRIS' and self.power and self.boost_xp:
             if time.time() - self.tiempo_boost >= self.duracion_poder:
@@ -191,9 +200,17 @@ class Juego:
                 for x_offset, celda in enumerate(fila):
                     if celda == 1:
                         self.dibujar_celda(self.posd['pos'][0] + x_offset, self.posd['pos'][1]+ y_offset, COLOR_PIEZA)
+
+            if self.enemy_tank:
+                for i in range(len(self.enemy_tank['pos'])):
+                    matriz_pieza = self.enemy_tank['cuerpo'][0]
+                    for y_offset, fila in enumerate(matriz_pieza):
+                        for x_offset, celda in enumerate(fila):
+                            if celda == 1:
+                                self.dibujar_celda(self.enemy_tank['pos'][i][0] + x_offset, self.enemy_tank['pos'][i][1]+ y_offset, COLOR_PFOOD, 'TRIANGLE', self.enemy_tank['dir'][i])
             if self.bullets:
                 for i in self.bullets:
-                    self.dibujar_celda(self.bullets[i]['pos'][0], self.bullets[i]['pos'][1], COLOR_FOOD)
+                    self.dibujar_celda(self.bullets[i]['pos'][0], self.bullets[i]['pos'][1], COLOR_FOOD, 'CIRCLE')
 
 
         # 3. Dibujar Snake y Comida
@@ -256,6 +273,7 @@ class Juego:
                 if verbo == 'DECREASE_SCORE': self.puntuacion -= int(objeto)
                 if verbo == 'SET_SCORE': self.puntuacion = int(objeto)
                 if verbo == 'GAME_OVER': self.juego_terminado = True
+                if verbo == 'CALL': self.ejecutar_evento('ON_'+objeto)
 
                 if self.tipo_juego == 'TETRIS':
                     if verbo == 'SPAWN': self.tetris_spawn_pieza()
@@ -265,6 +283,7 @@ class Juego:
                 if self.tipo_juego == 'TANK':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_player(param)
                     if verbo == 'SPAWN' and objeto == 'BULLET': self.spawn_tank_bullet()
+                    if verbo == 'SPAWN' and objeto == 'ENEMY': self.spawn_enemy(param[0])
                     if verbo == 'MOVE' and objeto == 'PLAYER': self.mover_pieza(param[0])
                 
                 if self.tipo_juego == 'SNAKE':
@@ -307,22 +326,59 @@ class Juego:
         pieza = self.datos_juego['shapes']['PLAYER_TANK']['estados']
         if self.tipo_juego == 'TANK':
             self.player_tank = pieza
-            self.posd = {'pos': param[0], 'dir': (0,0)}
+            self.posd = {'pos': param[0], 'dir': [0,0]}
+
+    def spawn_enemy(self, param):
+        while True:
+            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
+            if (x, y) != self.posd['pos'] and (x,y) not in self.enemy_tank['pos']:
+                self.enemy_tank['pos'].append([x,y])
+                self.enemy_tank['hp'].append(100) 
+                self.enemy_tank['dir'].append([0,0])
+                break
 
     def spawn_tank_bullet(self):
         self.bullets[str(len(self.bullets.keys()))] = {'pos': list(self.posd['pos']), 'dir': list(self.posd['dir'])}
+
+
+    def enemy_dead(self):
+        if not self.enemy_tank: return
+        d = []
+        for i in range(len(self.enemy_tank['pos'])):
+            if self.enemy_tank['hp'][i] == 0: d.append(i)
+        for i in d:
+            self.enemy_tank['pos'].pop(i)
+            self.enemy_tank['hp'].pop(i)
+
+    def enemy_movement(self):
+        for i in range(len(self.enemy_tank['pos'])):
+            x, y = self.posd['pos'][0] - self.enemy_tank['pos'][i][0], self.posd['pos'][1] - self.enemy_tank['pos'][i][1]
+            x = 0 if x == 0 else x/abs(x)
+            y = 0 if y == 0 else y/abs(y)
+            self.enemy_tank['dir'][i] = [x,y]
+
+            if x == 0 and y == 0: self.ejecutar_evento('ON_COLLISION')
+            else:
+                self.enemy_tank['pos'][i][0] += x
+                self.enemy_tank['pos'][i][1] += y
 
     def bullet_logic(self):
         if not self.bullets: return
         d = []
         for i in self.bullets:
-            if self.bullets[i]['pos'][0] < 0 or self.bullets[i]['pos'][0] > self.ancho: d.append(i)
-            elif self.bullets[i]['pos'][1] < 0 or self.bullets[i]['pos'][1] > self.alto: d.append(i)
+            x, y = self.bullets[i]['pos'][0], self.bullets[i]['pos'][1]
+            try:
+                index = self.enemy_tank['pos'].index([x,y])
+                self.enemy_tank['hp'][index] -= 100
+                self.ejecutar_evento('ON_ENEMY_DEAD')
+                d.append(i)
+                continue
+            except ValueError: index = None
+            if (x < 0 or x > self.ancho) or (y < 0 or y > self.alto): d.append(i)
             else:
                 self.bullets[i]['pos'][0] += self.bullets[i]['dir'][0]
                 self.bullets[i]['pos'][1] += self.bullets[i]['dir'][1]
         for i in d: self.bullets.pop(i)
-        
 
     def tetris_spawn_pieza(self):
         nombre_pieza = self.probabilidad_ponderada()

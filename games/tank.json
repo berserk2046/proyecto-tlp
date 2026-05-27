@@ -4,11 +4,6 @@
       "estados": [
         [
           [
-            1, 
-            1
-          ], 
-          [
-            1, 
             1
           ]
         ]
@@ -17,6 +12,23 @@
         "color": null, 
         "collision": null, 
         "chance": null, 
+        "hp": null, 
+        "style": null
+      }
+    }, 
+    "ENEMY": {
+      "estados": [
+        [
+          [
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "color": null, 
+        "collision": null, 
+        "chance": null, 
+        "hp": "100", 
         "style": null
       }
     }
@@ -48,10 +60,19 @@
         "objeto": "PLAYER"
       }
     ], 
-    "ON_KEY_UP": [
+    "ON_RANDOM": [
       {
         "params": [
-          "UP"
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "ENEMY"
+      }
+    ], 
+    "ON_KEY_RIGHT": [
+      {
+        "params": [
+          "RIGHT"
         ], 
         "accion": "MOVE", 
         "objeto": "PLAYER"
@@ -69,13 +90,27 @@
         "objeto": "PLAYER"
       }
     ], 
-    "ON_KEY_RIGHT": [
+    "ON_ENEMY_DEAD": [
+      {
+        "params": [], 
+        "accion": "INCREASE_SCORE", 
+        "objeto": "50"
+      }
+    ], 
+    "ON_KEY_UP": [
       {
         "params": [
-          "RIGHT"
+          "UP"
         ], 
         "accion": "MOVE", 
         "objeto": "PLAYER"
+      }
+    ], 
+    "ON_COLLISION": [
+      {
+        "params": [], 
+        "accion": "GAME_OVER", 
+        "objeto": null
       }
     ], 
     "ON_KEY_LEFT": [

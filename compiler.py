@@ -75,9 +75,9 @@ class Parser:
         self.consumir(':')
 
         config = {}
-        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION']
+        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION', 'HP', 'TYPE']
         for i in list_config:
-            config[i.lower()] = None
+            config[i.lower()] = None if i != 'TYPE' else 'PLAYER'
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] in list_config:
             key = self.consumir()
             self.consumir(':')

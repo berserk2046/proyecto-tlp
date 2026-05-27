@@ -9,10 +9,12 @@
         ]
       ], 
       "config": {
+        "style": "CIRCLE", 
         "color": null, 
+        "hp": null, 
         "collision": null, 
         "chance": null, 
-        "style": "CIRCLE"
+        "type": "PLAYER"
       }
     }
   }, 
