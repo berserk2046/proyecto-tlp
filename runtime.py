@@ -21,16 +21,20 @@ class Juego:
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
         self.power = config.get('power', 0)
+        self.target_score = config.get('target_score', 10000000)
         self.duracion_poder = config.get('power_time', 0)
         self.level = config.get('levels', 'BABY')
         self.puntuacion = 0
         self.juego_terminado = False
+        self.juego_ganado = False
+        self.final_boss = False
 
         # -- Checkeo variables dadas por BRICK -- #
         if self.power == 'ON': self.power = 1
         else: self.power = 0
         if self.level not in ['BABY', 'ENTUSIASTA', 'NYAN_CAT']: self.level = 'BABY'
         if self.duracion_poder != None: self.duracion_poder = int(self.duracion_poder)
+        self.target_score = int(self.target_score)
         
         # --- Configuracion de la GUI ---
         self.root = tk.Tk()
@@ -60,8 +64,18 @@ class Juego:
             self.label_pow = tk.Label(self.marco_score, text="BOOST POWER:\nAleatoriamente se otorgara un boost (10%)\nLas piezas cambiaran a amarillo\nLa XP se multiplicara por cada linea limpiada.", bg='#222222', fg='yellow', font=('Consolas', 10))
             self.label_pow.pack(pady=30, padx=10)
 
+
         # Configurar eventos de teclado. Usamos <Key> para capturar cualquier tecla
         self.root.bind('<Key>', self.manejar_input_gui)
+
+        self.entities = {'PLAYER': {}, 'ENEMY': {}, 'ITEM': {}, 'COMIDA': {}, 'BOSS': {}}
+        self.items = {}
+        self.directions = {'UP': [0,-1], 'DOWN': [0,1], 'RIGHT': [1,0], 'LEFT': [-1,0]}
+
+        if self.tipo_juego == 'TANK':
+            self.label_hp = tk.Label(self.marco_score, text="HP:\n", bg='#222222', fg='yellow', font=('Consolas', 10))
+            self.label_hp.pack(pady=30, padx=10)
+
         
         if self.tipo_juego == 'TETRIS':
             self.pieza_actual = None
@@ -90,15 +104,28 @@ class Juego:
 
         if self.tipo_juego == 'TANK':
             self.player_tank = []
-            self.enemy_tank = {'cuerpo': self.datos_juego['shapes']['ENEMY']['estados'], 'pos': [], 'dir': [], 'hp': []}
+            self.enemy_tank = {}
             self.posd = {}
             self.bullets = {}
-            self.velocidad_gravedad = 0.5
+            self.velocidad_gravedad = 0.15
 
+
+        self.entity_counter = 0
+        self.tick_counter = 0
+        # Basura global para eliminar elementos de entities sin inconvenientes
+        self.to_remove = []
+
+        # TABLE WITH ALL SHAPES INSIDE THEIR TYPES
+        self.shapes = {'PLAYER': {}, 'ENEMY': {}, 'ITEM': {}, 'BOSS': {}}
+        for i in self.datos_juego['shapes'].keys():
+            e = self.datos_juego['shapes'][i]
+            self.shapes[e['config']['type']][i] = e
 
         self.timer_gravedad = 0
+        self.timer_slow_gravedad = 0
         self.timer_random_events = 0
         self.ejecutar_evento('ON_START')
+
         self.timer_id = None # Para controlar el loop de Tkinter
 
     def run(self):
@@ -111,21 +138,34 @@ class Juego:
             self.mostrar_game_over()
             return
 
+        if self.juego_ganado:
+            self.mostrar_game_over('WIN')
+            return
+
+        if self.puntuacion == self.target_score:
+            self.ejecutar_evento('ON_TARGET_SCORE')
+            self.target_score = 10000000
+
         # Logica de TICK/Gravedad
         # El loop se ejecuta cada 50ms (0.05 segundos)
         self.timer_gravedad += 0.05 
         if self.timer_gravedad >= self.velocidad_gravedad:
             self.timer_gravedad = 0
             self.ejecutar_evento('ON_TICK')
-            if self.tipo_juego == 'TANK': self.enemy_movement()
+            self.tick_counter += 1
+
+        self.timer_slow_gravedad += 0.0075
+        if self.timer_slow_gravedad >= self.velocidad_gravedad:
+            self.timer_slow_gravedad = 0
+            self.ejecutar_evento('ON_STICK')
+
+            # if self.tipo_juego == 'TANK': self.enemy_movement()
 
         if self.tipo_juego == 'TANK':
-            self.timer_random_events += 0.06
+            self.timer_random_events += 0.02
             if self.timer_random_events >= self.velocidad_gravedad:
                 if random.randint(0,100) <= 2: self.ejecutar_evento('ON_RANDOM')
 
-            self.bullet_logic()
-            self.enemy_dead()
         # DESACTIVAR BOOST XP
         if self.tipo_juego == 'TETRIS' and self.power and self.boost_xp:
             if time.time() - self.tiempo_boost >= self.duracion_poder:
@@ -159,11 +199,12 @@ class Juego:
         elif key == 'DOWN': self.ejecutar_evento('ON_KEY_DOWN')
         elif key == 'LEFT': self.ejecutar_evento('ON_KEY_LEFT')
         elif key == 'RIGHT': self.ejecutar_evento('ON_KEY_RIGHT')
-        elif self.tipo_juego == 'TANK' and key == "RETURN": self.ejecutar_evento('ON_KEY_ENTER')
+        elif key == "Z": self.ejecutar_evento('ON_KEY_RETURN')
 
     def dibujar(self):
         self.canvas.delete("all") # Borrar todo en cada frame
         self.label_score.config(text="PUNTUACION\n" + str(self.puntuacion))
+        self.label_hp.config(text="HP: " + str(self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]['config']['hp']))
         
         # Colores
         COLOR_GRID_FIJA = '#343434' # Gris oscuro para las celdas fijadas (Tetris)
@@ -195,22 +236,38 @@ class Juego:
                         self.dibujar_celda(self.pieza_x + x_offset, self.pieza_y + y_offset, COLOR_PIEZA)
 
         if self.tipo_juego == 'TANK':
-            matriz_pieza = self.player_tank[0]
+            i = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
+            matriz_pieza = i['estados'][0]
             for y_offset, fila in enumerate(matriz_pieza):
                 for x_offset, celda in enumerate(fila):
                     if celda == 1:
-                        self.dibujar_celda(self.posd['pos'][0] + x_offset, self.posd['pos'][1]+ y_offset, COLOR_PIEZA)
+                        self.dibujar_celda(i['pos'][0] + x_offset, i['pos'][1]+ y_offset, COLOR_PIEZA)
 
-            if self.enemy_tank:
-                for i in range(len(self.enemy_tank['pos'])):
-                    matriz_pieza = self.enemy_tank['cuerpo'][0]
-                    for y_offset, fila in enumerate(matriz_pieza):
+            if 'ENEMY' in self.entities:
+                for i in self.entities['ENEMY'].keys():
+                    e = self.entities['ENEMY'][i]
+                    b = e['estados'][0]
+                    for y_offset, fila in enumerate(b):
                         for x_offset, celda in enumerate(fila):
                             if celda == 1:
-                                self.dibujar_celda(self.enemy_tank['pos'][i][0] + x_offset, self.enemy_tank['pos'][i][1]+ y_offset, COLOR_PFOOD, 'TRIANGLE', self.enemy_tank['dir'][i])
-            if self.bullets:
-                for i in self.bullets:
-                    self.dibujar_celda(self.bullets[i]['pos'][0], self.bullets[i]['pos'][1], COLOR_FOOD, 'CIRCLE')
+                                self.dibujar_celda(e['pos'][0]+x_offset, e['pos'][1]+y_offset, '#'+e['config']['color'], e['config']['style'], e['dir'])
+            if 'COMIDA' in self.entities:
+                for i in self.entities['COMIDA'].keys():
+                    x, y = self.entities['COMIDA'][i]['pos']
+                    self.dibujar_celda(x, y, COLOR_PFOOD)
+
+            for i in self.entities['BOSS'].keys():
+                e = self.entities['BOSS'][i]
+                b = e['estados'][0]
+                for y_offset, fila in enumerate(b):
+                    for x_offset, celda in enumerate(fila):
+                        if celda == 1:
+                            self.dibujar_celda(e['pos'][0]+x_offset, e['pos'][1]+y_offset, '#'+e['config']['color'], e['config']['style'], e['dir'])
+
+
+            for i in self.entities['ITEM'].keys():
+                e = self.entities['ITEM'][i]
+                self.dibujar_celda(e['pos'][0], e['pos'][1], '#'+e['config']['color'], e['config']['style'])
 
 
         # 3. Dibujar Snake y Comida
@@ -264,7 +321,7 @@ class Juego:
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline='#000000')
 
 
-    def ejecutar_evento(self, nombre_evento):
+    def ejecutar_evento(self, nombre_evento, obj=None):
         if nombre_evento in self.datos_juego['events']:
             for accion in self.datos_juego['events'][nombre_evento]:
                 verbo, objeto, param = accion.get('accion'), accion.get('objeto'), accion.get('params')
@@ -273,6 +330,7 @@ class Juego:
                 if verbo == 'DECREASE_SCORE': self.puntuacion -= int(objeto)
                 if verbo == 'SET_SCORE': self.puntuacion = int(objeto)
                 if verbo == 'GAME_OVER': self.juego_terminado = True
+                if verbo == 'GAME_WIN': self.juego_ganado= True
                 if verbo == 'CALL': self.ejecutar_evento('ON_'+objeto)
 
                 if self.tipo_juego == 'TETRIS':
@@ -281,10 +339,15 @@ class Juego:
                     if verbo == 'ROTATE': self.tetris_rotar_pieza()
 
                 if self.tipo_juego == 'TANK':
-                    if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_player(param)
-                    if verbo == 'SPAWN' and objeto == 'BULLET': self.spawn_tank_bullet()
-                    if verbo == 'SPAWN' and objeto == 'ENEMY': self.spawn_enemy(param[0])
-                    if verbo == 'MOVE' and objeto == 'PLAYER': self.mover_pieza(param[0])
+
+                    if verbo == 'SPAWN':
+                        self.spawn_enemy(objeto, param[0])
+                    if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
+                    if verbo == 'REMOVE': self.to_remove.append([objeto, obj])
+                    if verbo == 'CHECK_OBJ_COLLISION': self.obj_collision(objeto)
+                    if verbo == 'CHECK_COLLISIONS': self.check_collisions()
+                    if verbo == 'TRASLADE': self.traslade(objeto, param[0])
+                    if verbo == 'LEVELS' and objeto == 'FINAL': self.final_level()
                 
                 if self.tipo_juego == 'SNAKE':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
@@ -322,63 +385,184 @@ class Juego:
             choice = lista[key]
         return None
 
-    def spawn_player(self, param):
-        pieza = self.datos_juego['shapes']['PLAYER_TANK']['estados']
-        if self.tipo_juego == 'TANK':
-            self.player_tank = pieza
-            self.posd = {'pos': param[0], 'dir': [0,0]}
+    def traslade(self, obj, param):
+        if obj != 'PLAYER': return
+        e = self.entities['PLAYER'][self.entities['PLAYER'].keys()[0]]
+        e['pos'] = param
 
-    def spawn_enemy(self, param):
-        while True:
-            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
-            if (x, y) != self.posd['pos'] and (x,y) not in self.enemy_tank['pos']:
-                self.enemy_tank['pos'].append([x,y])
-                self.enemy_tank['hp'].append(100) 
-                self.enemy_tank['dir'].append([0,0])
-                break
+    def final_level(self):
+        for j in ['COMIDA', 'ENEMY']:
+            for i in self.entities[j].keys():
+                self.entities[j].pop(i)
+        self.final_boss = 1
 
-    def spawn_tank_bullet(self):
-        self.bullets[str(len(self.bullets.keys()))] = {'pos': list(self.posd['pos']), 'dir': list(self.posd['dir'])}
+    def spawn_enemy(self, obj, param):
+        if self.final_boss and (obj not in ['BOSS', 'ITEM']):
+            return
+        if param == 'BOSS' and not self.final_boss: return
+        entity = None
+        shape_name = None
+        used_positions = []
 
+        if obj != 'COMIDA':
+            i = random.choice(self.shapes[obj].keys())
+            shape_name = i+str(self.entity_counter)
+            entity = self.entities[obj][shape_name] = dict(self.shapes[obj][i])
+            if obj != 'ITEM':
+                entity['config']['hp'] = int(entity['config']['hp'])
+            entity['config']['dmg'] = int(entity['config']['dmg'])
+        else:
+            shape_name = obj+str(self.entity_counter)
+            entity = self.entities[obj][shape_name] = {'pos': [], 'regen': 50, 'config': {'type': 'COMIDA'}}
 
-    def enemy_dead(self):
-        if not self.enemy_tank: return
-        d = []
-        for i in range(len(self.enemy_tank['pos'])):
-            if self.enemy_tank['hp'][i] == 0: d.append(i)
-        for i in d:
-            self.enemy_tank['pos'].pop(i)
-            self.enemy_tank['hp'].pop(i)
+            
+        self.entity_counter += 1
+        if param == 'RANDOM':
+            while True:
+                x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
+                for i in self.entities.keys():
+                    for j in self.entities[i].keys():
+                        if j == shape_name: continue
+                        used_positions.append(self.entities[i][j]['pos'])
+                if [x,y] not in used_positions: 
+                    entity['pos'] = [x,y]
+                    if obj != 'COMIDA': entity['dir'] = [0,1]
+                    break
+        elif param == 'PLAYER':
+            p = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
+            entity['pos'] = list([p['pos'][0] + p['dir'][0], p['pos'][1] + p['dir'][1]])
+            entity['dir'] = list(p['dir'])
+        elif param == 'BOSS':
+            p = self.entities['BOSS'][self.entities['BOSS'].keys()[0]]
+            entity['pos'] = list([p['pos'][0] + p['dir'][0], p['pos'][1] + p['dir'][1]])
+            entity['dir'] = list(p['dir'])
+        elif param == 'ENEMY':
+            if not self.entities[param]:
+                self.entities[obj].pop(shape_name)
+                return
+            i = random.choice(self.entities[param].keys())
+            p = self.entities[param][i]
+            entity['config'] = dict(entity['config'])
+            entity['config']['color'] = 'FF0022'
+            entity['pos'] = list([p['pos'][0] + p['dir'][0], p['pos'][1] + p['dir'][1]])
+            entity['dir'] = list(p['dir'])
 
-    def enemy_movement(self):
-        for i in range(len(self.enemy_tank['pos'])):
-            x, y = self.posd['pos'][0] - self.enemy_tank['pos'][i][0], self.posd['pos'][1] - self.enemy_tank['pos'][i][1]
-            x = 0 if x == 0 else x/abs(x)
-            y = 0 if y == 0 else y/abs(y)
-            self.enemy_tank['dir'][i] = [x,y]
+        elif param == None: self.entities[obj][shape_name]['pos'] = [self.ancho/2, self.alto/2]
+        else:
+            self.entities[obj][shape_name]['pos'] = param
+            self.entities[obj][shape_name]['dir'] = [0,1]
+                
 
-            if x == 0 and y == 0: self.ejecutar_evento('ON_COLLISION')
-            else:
-                self.enemy_tank['pos'][i][0] += x
-                self.enemy_tank['pos'][i][1] += y
+    def enemy_movement(self, player, enemy):
+        x, y = player['pos'][0] - enemy['pos'][0], player['pos'][1] - enemy['pos'][1]
+        x = 0 if x == 0 else x/abs(x)
+        y = 0 if y == 0 else y/abs(y)
+        enemy['dir'] = [x,y]
 
-    def bullet_logic(self):
-        if not self.bullets: return
-        d = []
-        for i in self.bullets:
-            x, y = self.bullets[i]['pos'][0], self.bullets[i]['pos'][1]
-            try:
-                index = self.enemy_tank['pos'].index([x,y])
-                self.enemy_tank['hp'][index] -= 100
-                self.ejecutar_evento('ON_ENEMY_DEAD')
-                d.append(i)
-                continue
-            except ValueError: index = None
-            if (x < 0 or x > self.ancho) or (y < 0 or y > self.alto): d.append(i)
-            else:
-                self.bullets[i]['pos'][0] += self.bullets[i]['dir'][0]
-                self.bullets[i]['pos'][1] += self.bullets[i]['dir'][1]
-        for i in d: self.bullets.pop(i)
+        if x != 0 or y != 0:
+            enemy['pos'][0] += x
+            enemy['pos'][1] += y
+
+    def obj_collision(self, obj):
+        if not self.entities[obj]: return
+
+        used_positions = []
+        for i in self.entities.keys():
+            for j in self.entities[i].keys():
+                used_positions.append({'key': j, 'entity': self.entities[i][j]})
+
+        for i in self.entities[obj].keys():
+            e = self.entities[obj][i]
+            x, y = e['pos']
+            if (x < 0 or x > self.ancho) or (y < 0 or y > self.alto):
+                if e['config']['type'] == 'PLAYER':
+                    if x < 0: e['pos'][0] = 0
+                    if x > self.ancho-1: e['pos'][0] = self.ancho-1
+                    if y < 0: e['pos'][1] = 0
+                    if y > self.alto-2: e['pos'][1] = self.alto-2
+                else: self.to_remove.append([obj,i])
+            indexs = [val for val in used_positions if val['entity']['pos'] == e['pos'] and val['key']!=i or val['entity']['config']['type']=='BOSS']
+            if e['config']['type'] == 'ENEMY':
+                for j in indexs:
+                    if j['entity']['config']['type'] == 'PLAYER':
+                        j['entity']['config']['hp'] -= e['config']['dmg']
+                        e['config']['hp'] -= j['entity']['config']['dmg']
+                        if j['entity']['config']['hp'] <= 0: self.ejecutar_evento('ON_COLLISION')
+                        if e['config']['hp'] <= 0:
+                            self.ejecutar_evento('ON_ENEMY_DIED', i)
+                    if j['entity']['config']['type'] == 'ITEM':
+                        e['config']['hp'] -= j['entity']['config']['dmg']
+                        if e['config']['hp'] <= 0:
+                            self.ejecutar_evento('ON_ENEMY_DIED', i)
+
+                        self.to_remove.append(['ITEM', j['key']])
+
+            if e['config']['type'] == 'PLAYER':
+                for j in indexs:
+                    if j['entity']['config']['type'] == 'BOSS':
+                        # block range of boss
+                        px, py = e['pos']
+                        x, y= j['entity']['pos']
+                        x1, y1= x + len(j['entity']['estados'][0][0]), y + len(j['entity']['estados'][0])
+                        if (x <= px < x1) and (y <= py < y1):
+                            e['config']['hp'] -= j['entity']['config']['dmg']
+                            j['entity']['config']['hp'] -= e['config']['dmg']
+                            if e['config']['hp'] <= 0: self.ejecutar_evento('ON_COLLISION')
+                            if j['entity']['config']['hp'] <= 0: self.ejecutar_evento('ON_WIN')
+
+                    if j['entity']['config']['type'] == 'COMIDA':
+                        if e['config']['hp'] <= 50: e['config']['hp'] += j['entity']['regen']
+                        if e['config']['hp'] > 50: e['config']['hp'] = 100 
+                        self.to_remove.append(['COMIDA', j['key']])
+                    if j['entity']['config']['type'] == 'ENEMY':
+                        e['config']['hp'] -= j['entity']['config']['dmg']
+                        j['entity']['config']['hp'] -= e['config']['dmg']
+                        if e['config']['hp'] <= 0: self.ejecutar_evento('ON_COLLISION')
+                        if j['entity']['config']['hp'] <= 0:
+                            self.ejecutar_evento('ON_ENEMY_DIED', j['key'])
+                    if j['entity']['config']['type'] == 'ITEM':
+                        e['config']['hp'] -= j['entity']['config']['dmg']
+                        if e['config']['hp'] <= 0: self.ejecutar_evento('ON_COLLISION')
+                        self.to_remove.append(['ITEM', j['key']])
+
+            if e['config']['type'] == 'ITEM':
+                hit = 0
+                for j in indexs:
+                    if j['entity']['config']['type'] == 'BOSS':
+                        # block range of boss
+                        px, py = e['pos']
+                        x, y= j['entity']['pos']
+                        x1, y1= x + len(j['entity']['estados'][0][0]), y + len(j['entity']['estados'][0])
+                        if (x <= px < x1) and (y <= py < y1):
+                            j['entity']['config']['hp'] -= e['config']['dmg']
+                            if j['entity']['config']['hp'] <= 0: self.ejecutar_evento('ON_WIN')
+                            hit = 1
+
+                    if j['entity']['config']['type'] == 'ENEMY':
+                        j['entity']['config']['hp'] -= e['config']['dmg']
+                        if j['entity']['config']['hp'] <= 0: self.ejecutar_evento('ON_ENEMY_DIED',j['key'])
+                        hit = 1
+                    if j['entity']['config']['type'] == 'PLAYER':
+                        j['entity']['config']['hp'] -= e['config']['dmg']
+                        if j['entity']['config']['hp'] <= 0: self.ejecutar_evento('ON_COLLISION')
+                        hit = 1
+                    if j['entity']['config']['type'] == 'ITEM':
+                        self.to_remove.append(['ITEM', j['key']])
+                        hit = 1
+                if hit: self.to_remove.append([obj, i])
+
+        if self.to_remove:
+            seen = set()
+            for i in self.to_remove:
+                p = (i[0], i[1])
+                if p not in seen and p[1] in self.entities[p[0]]:
+                    self.entities[i[0]].pop(i[1])
+                    seen.add(p)
+            self.to_remove = []
+
+    def check_collisions(self):
+        for i in self.entities.keys():
+            self.obj_collision(i)
 
     def tetris_spawn_pieza(self):
         nombre_pieza = self.probabilidad_ponderada()
@@ -390,13 +574,15 @@ class Juego:
         if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
             self.juego_terminado = True
 
-    def mover_pieza(self, direccion):
+    def mover_pieza(self, obj, direccion):
+        if self.final_boss and obj not in ['PLAYER', 'ITEM', 'BOSS']: return
+        if not self.final_boss and obj == 'BOSS': return
         if self.tipo_juego == 'TETRIS' and not self.pieza_actual: return
-        dire = (0, 0)
-        if direccion == 'UP': dire = (0, -1)
-        if direccion == 'DOWN': dire = (0, 1)
-        if direccion == 'LEFT': dire = (-1, 0)
-        if direccion == 'RIGHT': dire = (1, 0)
+        dire = None
+        forward = 0
+
+        if direccion not in self.directions or direccion == 'FORWARD': forward = 1
+        else: dire = self.directions[direccion]
 
         if self.tipo_juego == 'TETRIS' and not self.tetris_verificar_colision(self.pieza_x + dire[0], self.pieza_y + dire[1], self.pieza_rotacion):
             self.pieza_x += dire[0]
@@ -404,10 +590,30 @@ class Juego:
         elif self.tipo_juego == 'TETRIS' and dire[1] > 0:
             self.tetris_fijar_pieza()       
 
+        if self.tipo_juego == 'TANK' and obj == 'ENEMY':
+            player = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
+            for i in self.entities['ENEMY'].keys():
+                e = self.entities['ENEMY'][i]
+                speed = int(e['config']['velocity'])
+                if self.tick_counter % speed == 0:
+                    self.enemy_movement(player, e)
+                else: continue
+            return
+
+        if self.tipo_juego == 'TANK' and obj == 'BOSS':
+            player = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
+            e = self.entities['BOSS'][self.entities['BOSS'].keys()[0]]
+            speed = int(e['config']['velocity'])
+            if self.tick_counter % speed == 0:
+                self.enemy_movement(player, e)
+            return
+
         if self.tipo_juego == 'TANK':
-            self.posd['pos'][0] += dire[0]
-            self.posd['pos'][1] += dire[1]
-            self.posd['dir'] = dire
+            for i in self.entities[obj].keys():
+                if forward: dire = self.entities[obj][i]['dir']
+                self.entities[obj][i]['pos'][0] += dire[0]
+                self.entities[obj][i]['pos'][1] += dire[1]
+                self.entities[obj][i]['dir'] = dire
 
         if self.tipo_juego == 'SNAKE': self.serpiente_direccion = dire
 
@@ -589,8 +795,14 @@ class Juego:
     # METODOS DE SALIDA (ADAPTADOS A GUI)
     # -----------------------------------
 
-    def mostrar_game_over(self):
+    def mostrar_game_over(self, option=None):
         # Muestra una ventana de mensaje de Tkinter
+        if option == 'WIN':
+            tkMessageBox.showinfo("Juego Ganado!!!!!", "Puntuacion Final: " + str(self.puntuacion))
+            self.root.destroy()
+            sys.exit(0)
+            return
+
         tkMessageBox.showinfo("Juego Terminado", "Puntuacion Final: " + str(self.puntuacion))
         self.root.destroy()
         sys.exit(0)

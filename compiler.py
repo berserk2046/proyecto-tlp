@@ -61,7 +61,7 @@ class Parser:
         alto = int(self.consumir())
         self.consumir(')')
         self.ast['config']['grid_size'] = [ancho, alto]
-        list_config = ['POWER', 'LEVELS', 'POWER_TIME']
+        list_config = ['POWER', 'LEVELS', 'POWER_TIME', 'TARGET_SCORE']
         for i in list_config:
             self.ast['config'][i.lower()] = None
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] in list_config:
@@ -75,8 +75,11 @@ class Parser:
         self.consumir(':')
 
         config = {}
-        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION', 'HP', 'TYPE']
+        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION', 'HP', 'TYPE', 'DMG', 'VELOCITY']
         for i in list_config:
+            if i == 'TYPE': config[i.lower()] = 'PLAYER'
+            if i == 'HP': config[i.lower()] = 100
+            if i == 'VELOCITY': config[i.lower()] = 1
             config[i.lower()] = None if i != 'TYPE' else 'PLAYER'
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] in list_config:
             key = self.consumir()
@@ -116,6 +119,9 @@ class Parser:
             if verbo == 'GAME_OVER':
                 acciones.append({'accion': verbo, 'objeto': None, 'params': []})
                 continue
+            if verbo == 'GAME_WIN':
+                acciones.append({'accion': verbo, 'objeto': None, 'params': []})
+                continue
             
             # Si no, parseamos el resto de la accion
             objeto = self.consumir()
@@ -124,14 +130,15 @@ class Parser:
                 self.consumir('AT')
                 if self.tokens[self.posicion] == 'RANDOM':
                     params.append(self.consumir())
-                else:
+                elif self.tokens[self.posicion] == '(':
                     self.consumir('(')
                     x = int(self.consumir())
                     self.consumir(',')
                     y = int(self.consumir())
                     self.consumir(')')
                     params.append([x, y])
-            elif self.posicion < len(self.tokens) and self.tokens[self.posicion] not in ['END', 'ON', 'DEFINE', 'SPAWN', 'MOVE', 'ROTATE', 'INCREASE_SCORE', 'SET_DIRECTION', 'GAME_OVER', 'DECREASE_SCORE', 'GROW', 'DECREASE']:
+                else: params.append(self.consumir())
+            elif self.posicion < len(self.tokens) and self.tokens[self.posicion] not in ['END', 'ON', 'DEFINE', 'SPAWN', 'MOVE', 'ROTATE', 'INCREASE_SCORE', 'SET_DIRECTION', 'GAME_OVER', 'DECREASE_SCORE', 'GROW', 'DECREASE', 'REMOVE', 'CHECK_OBJ_COLLISION', 'CHECK_COLLISIONS', 'LEVELS']:
                 params.append(self.consumir())
             acciones.append({'accion': verbo, 'objeto': objeto, 'params': params})
         self.consumir('END')

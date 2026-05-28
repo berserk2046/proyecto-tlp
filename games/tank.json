@@ -1,5 +1,62 @@
 {
   "shapes": {
+    "TANK": {
+      "estados": [
+        [
+          [
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "style": "TRIANGLE", 
+        "dmg": "20", 
+        "color": "998400", 
+        "hp": "100", 
+        "collision": null, 
+        "chance": null, 
+        "velocity": "5", 
+        "type": "ENEMY"
+      }
+    }, 
+    "BULLET": {
+      "estados": [
+        [
+          [
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "style": "CIRCLE", 
+        "dmg": "100", 
+        "color": "110000", 
+        "hp": null, 
+        "collision": null, 
+        "chance": null, 
+        "velocity": null, 
+        "type": "ITEM"
+      }
+    }, 
+    "TANK_RESISTANT": {
+      "estados": [
+        [
+          [
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "style": "TRIANGLE", 
+        "dmg": "50", 
+        "color": "000099", 
+        "hp": "300", 
+        "collision": null, 
+        "chance": null, 
+        "velocity": "10", 
+        "type": "ENEMY"
+      }
+    }, 
     "PLAYER_TANK": {
       "estados": [
         [
@@ -9,14 +66,41 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": "100", 
         "color": null, 
+        "hp": "100", 
         "collision": null, 
         "chance": null, 
-        "hp": null, 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
-    "ENEMY": {
+    "BOSS": {
+      "estados": [
+        [
+          [
+            1, 
+            1
+          ], 
+          [
+            1, 
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "style": "TRIANGLE", 
+        "dmg": "50", 
+        "color": "000000", 
+        "hp": "1000", 
+        "collision": null, 
+        "chance": null, 
+        "velocity": "5", 
+        "type": "BOSS"
+      }
+    }, 
+    "TANK_FAST": {
       "estados": [
         [
           [
@@ -25,17 +109,21 @@
         ]
       ], 
       "config": {
-        "color": null, 
+        "style": "TRIANGLE", 
+        "dmg": "10", 
+        "color": "009900", 
+        "hp": "50", 
         "collision": null, 
         "chance": null, 
-        "hp": "100", 
-        "style": null
+        "velocity": "3", 
+        "type": "ENEMY"
       }
     }
   }, 
   "tipo_juego": "TANK", 
   "config": {
     "levels": null, 
+    "target_score": "300", 
     "grid_size": [
       30, 
       30
@@ -44,22 +132,6 @@
     "power_time": null
   }, 
   "events": {
-    "ON_KEY_ENTER": [
-      {
-        "params": [], 
-        "accion": "SPAWN", 
-        "objeto": "BULLET"
-      }
-    ], 
-    "ON_KEY_DOWN": [
-      {
-        "params": [
-          "DOWN"
-        ], 
-        "accion": "MOVE", 
-        "objeto": "PLAYER"
-      }
-    ], 
     "ON_RANDOM": [
       {
         "params": [
@@ -67,6 +139,83 @@
         ], 
         "accion": "SPAWN", 
         "objeto": "ENEMY"
+      }, 
+      {
+        "params": [
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "COMIDA"
+      }
+    ], 
+    "ON_STICK": [
+      {
+        "params": [
+          "ENEMY"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "ITEM"
+      }, 
+      {
+        "params": [
+          "BOSS"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "ITEM"
+      }
+    ], 
+    "ON_WIN": [
+      {
+        "params": [], 
+        "accion": "GAME_WIN", 
+        "objeto": null
+      }
+    ], 
+    "ON_KEY_RETURN": [
+      {
+        "params": [
+          "PLAYER"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "ITEM"
+      }
+    ], 
+    "ON_TICK": [
+      {
+        "params": [
+          "FORWARD"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "ITEM"
+      }, 
+      {
+        "params": [], 
+        "accion": "CHECK_OBJ_COLLISION", 
+        "objeto": "ITEM"
+      }, 
+      {
+        "params": [
+          "FORWARD"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "ENEMY"
+      }, 
+      {
+        "params": [
+          "FORWARD"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "BOSS"
+      }, 
+      {
+        "params": [], 
+        "accion": "CHECK_OBJ_COLLISION", 
+        "objeto": "ENEMY"
+      }, 
+      {
+        "params": [], 
+        "accion": "CHECK_OBJ_COLLISION", 
+        "objeto": "PLAYER"
       }
     ], 
     "ON_KEY_RIGHT": [
@@ -75,6 +224,33 @@
           "RIGHT"
         ], 
         "accion": "MOVE", 
+        "objeto": "PLAYER"
+      }
+    ], 
+    "ON_TARGET_SCORE": [
+      {
+        "params": [], 
+        "accion": "LEVELS", 
+        "objeto": "FINAL"
+      }, 
+      {
+        "params": [
+          [
+            15, 
+            15
+          ]
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "BOSS"
+      }, 
+      {
+        "params": [
+          [
+            15, 
+            1
+          ]
+        ], 
+        "accion": "TRASLADE", 
         "objeto": "PLAYER"
       }
     ], 
@@ -90,11 +266,16 @@
         "objeto": "PLAYER"
       }
     ], 
-    "ON_ENEMY_DEAD": [
+    "ON_ENEMY_DIED": [
       {
         "params": [], 
         "accion": "INCREASE_SCORE", 
         "objeto": "50"
+      }, 
+      {
+        "params": [], 
+        "accion": "REMOVE", 
+        "objeto": "ENEMY"
       }
     ], 
     "ON_KEY_UP": [
@@ -117,6 +298,15 @@
       {
         "params": [
           "LEFT"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "PLAYER"
+      }
+    ], 
+    "ON_KEY_DOWN": [
+      {
+        "params": [
+          "DOWN"
         ], 
         "accion": "MOVE", 
         "objeto": "PLAYER"
