@@ -199,7 +199,7 @@ class Juego:
         elif key == 'DOWN': self.ejecutar_evento('ON_KEY_DOWN')
         elif key == 'LEFT': self.ejecutar_evento('ON_KEY_LEFT')
         elif key == 'RIGHT': self.ejecutar_evento('ON_KEY_RIGHT')
-        elif key == "Z": self.ejecutar_evento('ON_KEY_RETURN')
+        elif key == "Z" or key == 'RETURN': self.ejecutar_evento('ON_KEY_RETURN')
 
     def dibujar(self):
         self.canvas.delete("all") # Borrar todo en cada frame
