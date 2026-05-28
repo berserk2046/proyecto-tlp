@@ -21,7 +21,7 @@ class Juego:
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
         self.power = config.get('power', 0)
-        self.target_score = config.get('target_score', 10000000)
+        self.target_score = config.get('target_score', 1000000)
         self.duracion_poder = config.get('power_time', 0)
         self.level = config.get('levels', 'BABY')
         self.puntuacion = 0
@@ -34,7 +34,8 @@ class Juego:
         else: self.power = 0
         if self.level not in ['BABY', 'ENTUSIASTA', 'NYAN_CAT']: self.level = 'BABY'
         if self.duracion_poder != None: self.duracion_poder = int(self.duracion_poder)
-        self.target_score = int(self.target_score)
+        if self.target_score != None:
+            self.target_score = int(self.target_score)
         
         # --- Configuracion de la GUI ---
         self.root = tk.Tk()
@@ -204,7 +205,8 @@ class Juego:
     def dibujar(self):
         self.canvas.delete("all") # Borrar todo en cada frame
         self.label_score.config(text="PUNTUACION\n" + str(self.puntuacion))
-        self.label_hp.config(text="HP: " + str(self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]['config']['hp']))
+        if self.tipo_juego == 'TANK':
+            self.label_hp.config(text="HP: " + str(self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]['config']['hp']))
         
         # Colores
         COLOR_GRID_FIJA = '#343434' # Gris oscuro para las celdas fijadas (Tetris)
@@ -341,7 +343,7 @@ class Juego:
                 if self.tipo_juego == 'TANK':
 
                     if verbo == 'SPAWN':
-                        self.spawn_enemy(objeto, param[0])
+                        self.spawn_shape(objeto, param[0])
                     if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'REMOVE': self.to_remove.append([objeto, obj])
                     if verbo == 'CHECK_OBJ_COLLISION': self.obj_collision(objeto)
@@ -396,7 +398,7 @@ class Juego:
                 self.entities[j].pop(i)
         self.final_boss = 1
 
-    def spawn_enemy(self, obj, param):
+    def spawn_shape(self, obj, param):
         if self.final_boss and (obj not in ['BOSS', 'ITEM']):
             return
         if param == 'BOSS' and not self.final_boss: return
@@ -574,13 +576,14 @@ class Juego:
         if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
             self.juego_terminado = True
 
-    def mover_pieza(self, obj, direccion):
+    def mover_pieza(self, obj, direccion=None):
         if self.final_boss and obj not in ['PLAYER', 'ITEM', 'BOSS']: return
         if not self.final_boss and obj == 'BOSS': return
         if self.tipo_juego == 'TETRIS' and not self.pieza_actual: return
         dire = None
         forward = 0
 
+        if direccion == None: direccion = obj
         if direccion not in self.directions or direccion == 'FORWARD': forward = 1
         else: dire = self.directions[direccion]
 

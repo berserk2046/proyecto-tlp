@@ -72,10 +72,14 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": "090909", 
+        "hp": null, 
         "collision": null, 
         "chance": null, 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
     "M_PIECE": {
@@ -150,10 +154,14 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": null, 
+        "hp": null, 
         "collision": null, 
         "chance": null, 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
     "S_PIECE": {
@@ -228,10 +236,14 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": null, 
+        "hp": null, 
         "collision": null, 
         "chance": "40", 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
     "L_PIECE": {
@@ -306,10 +318,14 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": "099000", 
+        "hp": null, 
         "collision": null, 
         "chance": null, 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
     "T_PIECE": {
@@ -384,10 +400,14 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": null, 
+        "hp": null, 
         "collision": null, 
         "chance": null, 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
     "I_PIECE": {
@@ -498,10 +518,14 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": "099090", 
+        "hp": null, 
         "collision": null, 
         "chance": "40", 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }, 
     "O_PIECE": {
@@ -518,16 +542,21 @@
         ]
       ], 
       "config": {
+        "style": null, 
+        "dmg": null, 
         "color": null, 
+        "hp": null, 
         "collision": null, 
         "chance": null, 
-        "style": null
+        "velocity": null, 
+        "type": "PLAYER"
       }
     }
   }, 
   "tipo_juego": "TETRIS", 
   "config": {
     "levels": null, 
+    "target_score": null, 
     "grid_size": [
       10, 
       20

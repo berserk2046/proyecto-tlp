@@ -10,10 +10,12 @@
       ], 
       "config": {
         "style": "CIRCLE", 
+        "dmg": null, 
         "color": null, 
         "hp": null, 
         "collision": null, 
         "chance": null, 
+        "velocity": null, 
         "type": "PLAYER"
       }
     }
@@ -21,6 +23,7 @@
   "tipo_juego": "SNAKE", 
   "config": {
     "levels": "BABY", 
+    "target_score": null, 
     "grid_size": [
       18, 
       18

@@ -93,7 +93,7 @@
         "style": "TRIANGLE", 
         "dmg": "50", 
         "color": "000000", 
-        "hp": "1000", 
+        "hp": "2000", 
         "collision": null, 
         "chance": null, 
         "velocity": "5", 
@@ -123,7 +123,7 @@
   "tipo_juego": "TANK", 
   "config": {
     "levels": null, 
-    "target_score": "300", 
+    "target_score": "700", 
     "grid_size": [
       30, 
       30

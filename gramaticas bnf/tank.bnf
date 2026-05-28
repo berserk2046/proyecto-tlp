@@ -1,0 +1,38 @@
+<programa>      ::= <tipo_juego> <grid> <config_extra> <definiciones> <eventos>
+
+<tipo_juego>    ::= "GAME_TYPE" "TANK"
+<grid>          ::= "GAME_GRID" "(" <numero> "," <numero> ")"
+<config_extra>  ::= <item_config> | <item_config> <config_extra>
+<item_config>   ::= "LEVELS" <identificador> | "TARGET_SCORE" <numero>
+
+<definiciones>  ::= <definicion_shape> | <definicion_shape> <definiciones>
+<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <configuracion> <estados> "END"
+
+<configuracion> ::= <propiedad> | <propiedad> <configuracion>
+<propiedad>     ::= "COLOR" ":" <numero> | "HP" ":" <numero> | "DMG" ":" <numero> | "TYPE" ":" <tipo_objeto> | "VELOCITY" ":" <numero> | "STYLE" ":" <estilo>
+
+<estados>       ::= <estado> | <estado> <estados>
+<estado>        ::= "STATE" <numero> ":" <matriz>
+<matriz>        ::= <fila> | <fila> <matriz>
+<fila>          ::= "[" <valores_fila> "]"
+<valores_fila>  ::= <numero> | <numero> "," <valores_fila>
+
+<eventos>       ::= <evento> | <evento> <eventos>
+<evento>        ::= "ON" <nombre_evento> ":" <acciones> "END"
+<nombre_evento> ::= "TICK" | "STICK" | "START" | "RANDOM" | "ENEMY_DIED" | "COLLISION" | "WIN" | "TARGET_SCORE" | "KEY_RETURN" | "KEY_UP" | "KEY_DOWN" | "KEY_LEFT" | "KEY_RIGHT"
+
+<acciones>      ::= <accion> | <accion> <acciones>
+<accion>        ::= <accion_simple> | <accion_compleja>
+<accion_simple> ::= "GAME_OVER" | "GAME_WIN" | "MOVE" <entidad> <direccion> | "REMOVE" <entidad> | "INCREASE_SCORE" <numero> | "MOVE" <entidad> "FORWARD" | "TRASLADE" <entidad> "AT" "(" <numero> "," <numero> ")"
+<accion_compleja>::= "SPAWN" <entidad> "AT" <ubicacion>
+
+<ubicacion>     ::= "(" <numero> "," <numero> ")" | "RANDOM" | <entidad>
+<entidad>       ::= "PLAYER" | "ITEM" | "ENEMY" | "BOSS" | "COMIDA"
+<tipo_objeto>   ::= "PLAYER" | "ITEM" | "ENEMY" | "BOSS"
+<direccion>     ::= "UP" | "DOWN" | "LEFT" | "RIGHT"
+<estilo>        ::= "CIRCLE" | "TRIANGLE"
+
+<identificador> ::= <letra> | <letra> <identificador>
+<numero>        ::= <digito> | <digito> <numero>
+<letra>         ::= "A" | ... | "Z" | "_"
+<digito>        ::= "0" | ... | "9"
