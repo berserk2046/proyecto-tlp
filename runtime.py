@@ -79,9 +79,7 @@ class Juego:
 
         
         if self.tipo_juego == 'TETRIS':
-            self.pieza_actual = None
-            self.pieza_x, self.pieza_y, self.pieza_rotacion = 0, 0, 0
-            self.pieza_config = None
+            self.pieza_x, self.pieza_y, self.pieza_rotacion = 0,0,0
             self.velocidad_gravedad = 0.2
             # BOOST XP
             self.boost_xp = False
@@ -226,16 +224,17 @@ class Juego:
                      self.dibujar_celda(x, y, COLOR_GRID_FIJA)
 
         # 2. Dibujar la pieza actual de Tetris
-        if self.tipo_juego == 'TETRIS' and self.pieza_actual:
+        if self.tipo_juego == 'TETRIS':
+            e = self.entities['PLAYER'][self.entities['PLAYER'].keys()[0]]
             if self.boost_xp:
                 COLOR_PIEZA = '#FFD700'
-            elif self.pieza_config['color'] != None:
-                COLOR_PIEZA = "#" + self.pieza_config['color']
-            matriz_pieza = self.pieza_actual[self.pieza_rotacion]
+            elif e['config']['color'] != None:
+                COLOR_PIEZA = "#" + e['config']['color']
+            matriz_pieza = e['estados'][e['config']['state_rotation']]
             for y_offset, fila in enumerate(matriz_pieza):
                 for x_offset, celda in enumerate(fila):
                     if celda == 1:
-                        self.dibujar_celda(self.pieza_x + x_offset, self.pieza_y + y_offset, COLOR_PIEZA)
+                        self.dibujar_celda(e['pos'][0] + x_offset, e['pos'][1] + y_offset, COLOR_PIEZA)
 
         if self.tipo_juego == 'TANK':
             i = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
@@ -327,6 +326,7 @@ class Juego:
         if nombre_evento in self.datos_juego['events']:
             for accion in self.datos_juego['events'][nombre_evento]:
                 verbo, objeto, param = accion.get('accion'), accion.get('objeto'), accion.get('params')
+                if not param: param = [None]
                 
                 if verbo == 'INCREASE_SCORE': self.puntuacion += int(objeto)
                 if verbo == 'DECREASE_SCORE': self.puntuacion -= int(objeto)
@@ -336,14 +336,13 @@ class Juego:
                 if verbo == 'CALL': self.ejecutar_evento('ON_'+objeto)
 
                 if self.tipo_juego == 'TETRIS':
-                    if verbo == 'SPAWN': self.tetris_spawn_pieza()
+                    if verbo == 'SPAWN': self.spawn_shape(objeto, param[0])
                     if verbo == 'MOVE': self.mover_pieza(param[0])
-                    if verbo == 'ROTATE': self.tetris_rotar_pieza()
+                    if verbo == 'ROTATE': self.mover_pieza(verbo)
 
                 if self.tipo_juego == 'TANK':
 
-                    if verbo == 'SPAWN':
-                        self.spawn_shape(objeto, param[0])
+                    if verbo == 'SPAWN': self.spawn_shape(objeto, param[0])
                     if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'REMOVE': self.to_remove.append([objeto, obj])
                     if verbo == 'CHECK_OBJ_COLLISION': self.obj_collision(objeto)
@@ -365,8 +364,8 @@ class Juego:
     # METODOS DE LOGICA DE JUEGO (MANTENIDOS DEL ARCHIVO ORIGINAL)
     # ---------------------------------------------------------------------
     #Probabilidad con pesos
-    def probabilidad_ponderada(self):
-        info = self.datos_juego['shapes']
+    def probabilidad_ponderada(self, obj):
+        info = dict(self.shapes[obj])
         names = list(info.keys())
         promedio = (100.0 / len(names)) / 100.0
         lista = {}
@@ -401,13 +400,16 @@ class Juego:
     def spawn_shape(self, obj, param):
         if self.final_boss and (obj not in ['BOSS', 'ITEM']):
             return
+
         if param == 'BOSS' and not self.final_boss: return
+        if obj == 'RANDOM_SHAPE': obj = 'PLAYER'
+
         entity = None
         shape_name = None
         used_positions = []
 
         if obj != 'COMIDA':
-            i = random.choice(self.shapes[obj].keys())
+            i = self.probabilidad_ponderada(obj)
             shape_name = i+str(self.entity_counter)
             entity = self.entities[obj][shape_name] = dict(self.shapes[obj][i])
             if obj != 'ITEM':
@@ -449,7 +451,9 @@ class Juego:
             entity['pos'] = list([p['pos'][0] + p['dir'][0], p['pos'][1] + p['dir'][1]])
             entity['dir'] = list(p['dir'])
 
-        elif param == None: self.entities[obj][shape_name]['pos'] = [self.ancho/2, self.alto/2]
+        elif param == None:
+            if self.tipo_juego == 'TETRIS': self.entities[obj][shape_name]['pos'] = [self.ancho/2 - 2, 0]
+            else: self.entities[obj][shape_name]['pos'] = [self.ancho/2, self.alto/2]
         else:
             self.entities[obj][shape_name]['pos'] = param
             self.entities[obj][shape_name]['dir'] = [0,1]
@@ -567,7 +571,7 @@ class Juego:
             self.obj_collision(i)
 
     def tetris_spawn_pieza(self):
-        nombre_pieza = self.probabilidad_ponderada()
+        nombre_pieza = self.probabilidad_ponderada('PLAYER')
 
         self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]['estados']
         self.pieza_config = self.datos_juego['shapes'][nombre_pieza]['config']
@@ -579,17 +583,30 @@ class Juego:
     def mover_pieza(self, obj, direccion=None):
         if self.final_boss and obj not in ['PLAYER', 'ITEM', 'BOSS']: return
         if not self.final_boss and obj == 'BOSS': return
-        if self.tipo_juego == 'TETRIS' and not self.pieza_actual: return
         dire = None
         forward = 0
 
-        if direccion == None: direccion = obj
+        # If move related bugs arise, look at this portion
+        if direccion == None:
+            direccion = obj
+            obj = 'PLAYER' #In set_direction command just set default to player object
+        if direccion == 'ROTATE':
+            for i in self.entities[obj].keys():
+                e = self.entities[obj][i]
+                if len(e['estados']) > 1:
+                    e['config']['state_rotation'] = (e['config']['state_rotation'] + 1) % len(e['estados'])
+            return
         if direccion not in self.directions or direccion == 'FORWARD': forward = 1
         else: dire = self.directions[direccion]
+        # End of portion
+        print(direccion)
+        print(dire)
 
-        if self.tipo_juego == 'TETRIS' and not self.tetris_verificar_colision(self.pieza_x + dire[0], self.pieza_y + dire[1], self.pieza_rotacion):
-            self.pieza_x += dire[0]
-            self.pieza_y += dire[1]
+        if self.tipo_juego == 'TETRIS':
+            e = self.entities[obj][self.entities[obj].keys()[0]]
+            if not self.tetris_verificar_colision(e['pos'][0], e['pos'][1], e['config']['state_rotation']):
+                e['pos'][0] += dire[0]
+                e['pos'][1] += dire[1]
         elif self.tipo_juego == 'TETRIS' and dire[1] > 0:
             self.tetris_fijar_pieza()       
 
@@ -638,8 +655,8 @@ class Juego:
         self.ejecutar_evento('ON_START')
 
     def tetris_verificar_colision(self, x, y, rotacion):
-        if not self.pieza_actual: return False
-        matriz_pieza = self.pieza_actual[rotacion]
+        e = self.entities['PLAYER'][self.entities['PLAYER'].keys()[0]]
+        matriz_pieza = e['estados'][e['config']['state_rotation']]
         for y_offset, fila in enumerate(matriz_pieza):
             for x_offset, celda in enumerate(fila):
                 if celda == 1:

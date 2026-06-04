@@ -73,12 +73,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": "090909", 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": null, 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }, 
@@ -155,12 +156,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": null, 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": null, 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }, 
@@ -237,12 +239,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": null, 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": "40", 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }, 
@@ -319,12 +322,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": "099000", 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": null, 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }, 
@@ -401,12 +405,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": null, 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": null, 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }, 
@@ -519,12 +524,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": "099090", 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": "40", 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }, 
@@ -543,12 +549,13 @@
       ], 
       "config": {
         "style": null, 
-        "dmg": null, 
+        "dmg": 0, 
         "color": null, 
-        "hp": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
         "collision": null, 
         "chance": null, 
-        "velocity": null, 
+        "velocity": 1, 
         "type": "PLAYER"
       }
     }

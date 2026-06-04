@@ -75,12 +75,16 @@ class Parser:
         self.consumir(':')
 
         config = {}
-        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION', 'HP', 'TYPE', 'DMG', 'VELOCITY']
+        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION', 'HP', 'TYPE', 'DMG', 'VELOCITY', 'STATE_ROTATION']
+        # Default values
         for i in list_config:
             if i == 'TYPE': config[i.lower()] = 'PLAYER'
-            if i == 'HP': config[i.lower()] = 100
-            if i == 'VELOCITY': config[i.lower()] = 1
-            config[i.lower()] = None if i != 'TYPE' else 'PLAYER'
+            elif i == 'HP': config[i.lower()] = 100
+            elif i == 'DMG': config[i.lower()] = 0
+            elif i == 'VELOCITY': config[i.lower()] = 1
+            elif i == 'STATE_ROTATION': config[i.lower()] = 0
+            else: config[i.lower()] = None
+
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] in list_config:
             key = self.consumir()
             self.consumir(':')
