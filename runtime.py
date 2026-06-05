@@ -224,24 +224,22 @@ class Juego:
                      self.dibujar_celda(x, y, COLOR_GRID_FIJA)
 
         # 2. Dibujar la pieza actual de Tetris
-        if self.tipo_juego in ['TETRIS', 'TANK']:
-            for i in self.entities.keys():
-                if i in ['ITEM', 'COMIDA']:
-                    for j in self.entities[i].keys():
-                        e = self.entities[i][j]
-                        print(e)
-                        self.dibujar_celda(e['pos'][0], e['pos'][1], '#'+e['config']['color'], e['config']['style'])
-                    continue
-
+        for i in self.entities.keys():
+            if i in ['ITEM', 'COMIDA']:
                 for j in self.entities[i].keys():
                     e = self.entities[i][j]
-                    if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
-                    if e['config']['color'] != None: COLOR_PIEZA = "#" + e['config']['color']
-                    matriz_pieza = e['estados'][e['config']['state_rotation']]
-                    for y_offset, fila in enumerate(matriz_pieza):
-                        for x_offset, celda in enumerate(fila):
-                            if celda == 1:
-                                self.dibujar_celda(e['pos'][0] + x_offset, e['pos'][1] + y_offset, COLOR_PIEZA, e['config']['style'], e['dir'])
+                    self.dibujar_celda(e['pos'][0], e['pos'][1], '#'+e['config']['color'], e['config']['style'])
+                continue
+
+            for j in self.entities[i].keys():
+                e = self.entities[i][j]
+                if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
+                if e['config']['color'] != None: COLOR_PIEZA = "#" + e['config']['color']
+                matriz_pieza = e['estados'][e['config']['state_rotation']]
+                for y_offset, fila in enumerate(matriz_pieza):
+                    for x_offset, celda in enumerate(fila):
+                        if celda == 1:
+                            self.dibujar_celda(e['pos'][0] + x_offset, e['pos'][1] + y_offset, COLOR_PIEZA, e['config']['style'], e['dir'])
 
         # 3. Dibujar Snake y Comida
         if self.tipo_juego == 'SNAKE':
@@ -249,12 +247,9 @@ class Juego:
             if self.level == 'NYAN_CAT':
                 for x, y in self.obstaculos:
                     self.dibujar_celda(x, y, '#777777')
-            if self.posicion_comida:
-                x, y = self.posicion_comida
-                self.dibujar_celda(x, y, COLOR_FOOD)
             if self.posicion_bcomida:
                 x, y = self.posicion_bcomida
-                self.dibujar_celda(x, y, COLOR_BFOOD)
+                self.dibujar_celda(x, y, COLOR_FOOD)
             if self.posicion_ycomida:
                 x, y = self.posicion_ycomida
                 self.dibujar_celda(x, y, COLOR_PFOOD)
@@ -698,7 +693,9 @@ class Juego:
         while True:
             x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
             if (x, y) not in self.serpiente_cuerpo:
-                self.posicion_comida = (x, y)
+                self.spawn_shape('COMIDA', 'RANDOM')
+                print(self.entities['COMIDA'])
+                self.entities['COMIDA']['COMIDA'+str(self.entity_counter-1)]['config']['color'] = "8A0BD2"
                 break
 
     def snake_spawn_bcomida(self):
@@ -707,6 +704,7 @@ class Juego:
             if (x, y) not in self.serpiente_cuerpo and (x, y) != self.posicion_comida:
                 self.posicion_bcomida = (x, y)
                 break
+
     def snake_spawn_ycomida(self):
         while True:
             x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
