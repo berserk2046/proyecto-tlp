@@ -214,8 +214,8 @@ class Juego:
         COLOR_SNAKE_CABEZA = '#00FF00' # Verde brillante
         COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
         COLOR_FOOD = '#FF0000'      # Rojo
-        COLOR_BFOOD = '#8A0BD2'
-        COLOR_PFOOD = '#FFD700'
+        COLOR_BFOOD = '#8A0BD2'     # morado
+        COLOR_PFOOD = '#FFD700'     # DOrado
         
         # 1. Dibujar la cuadricula estatica (grid base)
         for y in range(self.alto):
@@ -224,52 +224,24 @@ class Juego:
                      self.dibujar_celda(x, y, COLOR_GRID_FIJA)
 
         # 2. Dibujar la pieza actual de Tetris
-        if self.tipo_juego == 'TETRIS':
-            e = self.entities['PLAYER'][self.entities['PLAYER'].keys()[0]]
-            if self.boost_xp:
-                COLOR_PIEZA = '#FFD700'
-            elif e['config']['color'] != None:
-                COLOR_PIEZA = "#" + e['config']['color']
-            matriz_pieza = e['estados'][e['config']['state_rotation']]
-            for y_offset, fila in enumerate(matriz_pieza):
-                for x_offset, celda in enumerate(fila):
-                    if celda == 1:
-                        self.dibujar_celda(e['pos'][0] + x_offset, e['pos'][1] + y_offset, COLOR_PIEZA)
+        if self.tipo_juego in ['TETRIS', 'TANK']:
+            for i in self.entities.keys():
+                if i in ['ITEM', 'COMIDA']:
+                    for j in self.entities[i].keys():
+                        e = self.entities[i][j]
+                        print(e)
+                        self.dibujar_celda(e['pos'][0], e['pos'][1], '#'+e['config']['color'], e['config']['style'])
+                    continue
 
-        if self.tipo_juego == 'TANK':
-            i = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
-            matriz_pieza = i['estados'][0]
-            for y_offset, fila in enumerate(matriz_pieza):
-                for x_offset, celda in enumerate(fila):
-                    if celda == 1:
-                        self.dibujar_celda(i['pos'][0] + x_offset, i['pos'][1]+ y_offset, COLOR_PIEZA)
-
-            if 'ENEMY' in self.entities:
-                for i in self.entities['ENEMY'].keys():
-                    e = self.entities['ENEMY'][i]
-                    b = e['estados'][0]
-                    for y_offset, fila in enumerate(b):
+                for j in self.entities[i].keys():
+                    e = self.entities[i][j]
+                    if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
+                    if e['config']['color'] != None: COLOR_PIEZA = "#" + e['config']['color']
+                    matriz_pieza = e['estados'][e['config']['state_rotation']]
+                    for y_offset, fila in enumerate(matriz_pieza):
                         for x_offset, celda in enumerate(fila):
                             if celda == 1:
-                                self.dibujar_celda(e['pos'][0]+x_offset, e['pos'][1]+y_offset, '#'+e['config']['color'], e['config']['style'], e['dir'])
-            if 'COMIDA' in self.entities:
-                for i in self.entities['COMIDA'].keys():
-                    x, y = self.entities['COMIDA'][i]['pos']
-                    self.dibujar_celda(x, y, COLOR_PFOOD)
-
-            for i in self.entities['BOSS'].keys():
-                e = self.entities['BOSS'][i]
-                b = e['estados'][0]
-                for y_offset, fila in enumerate(b):
-                    for x_offset, celda in enumerate(fila):
-                        if celda == 1:
-                            self.dibujar_celda(e['pos'][0]+x_offset, e['pos'][1]+y_offset, '#'+e['config']['color'], e['config']['style'], e['dir'])
-
-
-            for i in self.entities['ITEM'].keys():
-                e = self.entities['ITEM'][i]
-                self.dibujar_celda(e['pos'][0], e['pos'][1], '#'+e['config']['color'], e['config']['style'])
-
+                                self.dibujar_celda(e['pos'][0] + x_offset, e['pos'][1] + y_offset, COLOR_PIEZA, e['config']['style'], e['dir'])
 
         # 3. Dibujar Snake y Comida
         if self.tipo_juego == 'SNAKE':
@@ -417,7 +389,7 @@ class Juego:
             entity['config']['dmg'] = int(entity['config']['dmg'])
         else:
             shape_name = obj+str(self.entity_counter)
-            entity = self.entities[obj][shape_name] = {'pos': [], 'regen': 50, 'config': {'type': 'COMIDA'}}
+            entity = self.entities[obj][shape_name] = {'pos': [], 'regen': 50, 'config': {'type': 'COMIDA', 'color': "FFD700", 'style': 'CIRCLE'}}
 
             
         self.entity_counter += 1
@@ -452,7 +424,9 @@ class Juego:
             entity['dir'] = list(p['dir'])
 
         elif param == None:
-            if self.tipo_juego == 'TETRIS': self.entities[obj][shape_name]['pos'] = [self.ancho/2 - 2, 0]
+            if self.tipo_juego == 'TETRIS':
+                self.entities[obj][shape_name]['pos'] = [self.ancho/2 - 2, 0]
+                self.entities[obj][shape_name]['dir'] = [0, 1]
             else: self.entities[obj][shape_name]['pos'] = [self.ancho/2, self.alto/2]
         else:
             self.entities[obj][shape_name]['pos'] = param
@@ -472,11 +446,7 @@ class Juego:
     def obj_collision(self, obj):
         if not self.entities[obj]: return
 
-        used_positions = []
-        for i in self.entities.keys():
-            for j in self.entities[i].keys():
-                used_positions.append({'key': j, 'entity': self.entities[i][j]})
-
+        # Calcula colisiones con la pared de las entidades primero (caso basico)
         for i in self.entities[obj].keys():
             e = self.entities[obj][i]
             x, y = e['pos']
@@ -487,6 +457,16 @@ class Juego:
                     if y < 0: e['pos'][1] = 0
                     if y > self.alto-2: e['pos'][1] = self.alto-2
                 else: self.to_remove.append([obj,i])
+
+        #Esto calcula todas las posiciones de las demas entidades para confirmar si hay colisiones con estas
+        used_positions = []
+        for i in self.entities.keys():
+            for j in self.entities[i].keys():
+                used_positions.append({'key': j, 'entity': self.entities[i][j]})
+
+        #Revizar Colision
+        for i in self.entities[obj].keys():
+            e = self.entities[obj][i]
             indexs = [val for val in used_positions if val['entity']['pos'] == e['pos'] and val['key']!=i or val['entity']['config']['type']=='BOSS']
             if e['config']['type'] == 'ENEMY':
                 for j in indexs:
