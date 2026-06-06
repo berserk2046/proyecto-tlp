@@ -619,13 +619,26 @@ class Juego:
             self.pieza_rotacion = nueva_rotacion
 
     def tetris_fijar_pieza(self):
-        matriz_pieza = self.pieza_actual[self.pieza_rotacion]
+        if not self.entities['PLAYER']:
+            return
+
+        key = self.entities['PLAYER'].keys()[0]
+        e = self.entities['PLAYER'][key]
+
+        matriz_pieza = e['estados'][e['config']['state_rotation']]
+
         for y_offset, fila in enumerate(matriz_pieza):
             for x_offset, celda in enumerate(fila):
                 if celda == 1:
-                    if 0 <= self.pieza_y + y_offset < self.alto and 0 <= self.pieza_x + x_offset < self.ancho:
-                        self.grid[self.pieza_y + y_offset][self.pieza_x + x_offset] = 1
-        self.pieza_actual = None
+                    x = e['pos'][0] + x_offset
+                    y = e['pos'][1] + y_offset
+
+                    if 0 <= x < self.ancho and 0 <= y < self.alto:
+                        self.grid[y][x] = 1
+
+    # eliminar la pieza activa
+        self.entities['PLAYER'].pop(key)
+
         self.tetris_limpiar_lineas()
         self.ejecutar_evento('ON_START')
 
