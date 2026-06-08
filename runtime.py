@@ -318,11 +318,11 @@ class Juego:
                     if verbo == 'LEVELS' and objeto == 'FINAL': self.final_level()
                 
                 if self.tipo_juego == 'SNAKE':
-                    if verbo == 'SPAWN' and objeto == 'PLAYER': self.snake_spawn_jugador(accion)
+                    if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_shape(objeto, param[0])
                     if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_comida()
                     if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
                     if verbo == 'SPAWN' and objeto == 'YFOOD': self.snake_spawn_ycomida()
-                    if verbo == 'MOVE' and objeto == 'PLAYER': self.snake_mover_jugador()
+                    if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'SET_DIRECTION': self.mover_pieza(objeto)
                     if verbo == 'GROW': self.snake_crecer(param[0])
                     if verbo == 'DECREASE': self.snake_decrease(param[0])
@@ -545,19 +545,10 @@ class Juego:
         for i in self.entities.keys():
             self.obj_collision(i)
 
-    def tetris_spawn_pieza(self):
-        nombre_pieza = self.probabilidad_ponderada('PLAYER')
-
-        self.pieza_actual = self.datos_juego['shapes'][nombre_pieza]['estados']
-        self.pieza_config = self.datos_juego['shapes'][nombre_pieza]['config']
-
-        self.pieza_x, self.pieza_y, self.pieza_rotacion = self.ancho / 2 - 2, 0, 0
-        if self.tetris_verificar_colision(self.pieza_x, self.pieza_y, self.pieza_rotacion):
-            self.juego_terminado = True
-
     def mover_pieza(self, obj, direccion=None):
         if self.final_boss and obj not in ['PLAYER', 'ITEM', 'BOSS']: return
         if not self.final_boss and obj == 'BOSS': return
+
         dire = None
         forward = 0
 
@@ -565,6 +556,8 @@ class Juego:
         if direccion == None:
             direccion = obj
             obj = 'PLAYER' #In set_direction command just set default to player object
+            self.entities[obj][self.entities[obj].keys()[0]]['dir'] = self.directions[direccion]
+            return
         if direccion == 'ROTATE':
             for i in self.entities[obj].keys():
                 e = self.entities[obj][i]
@@ -574,16 +567,14 @@ class Juego:
         if direccion not in self.directions or direccion == 'FORWARD': forward = 1
         else: dire = self.directions[direccion]
         # End of portion
-        print(direccion)
-        print(dire)
 
         if self.tipo_juego == 'TETRIS':
             e = self.entities[obj][self.entities[obj].keys()[0]]
-            if not self.tetris_verificar_colision(e['pos'][0], e['pos'][1], e['config']['state_rotation']):
+            if not self.tetris_verificar_colision(e['pos'][0]+dire[0], e['pos'][1]+dire[1], e['config']['state_rotation']):
                 e['pos'][0] += dire[0]
                 e['pos'][1] += dire[1]
-        elif self.tipo_juego == 'TETRIS' and dire[1] > 0:
-            self.tetris_fijar_pieza()       
+            elif self.tipo_juego == 'TETRIS' and dire[1] > 0:
+                self.tetris_fijar_pieza()       
 
         if self.tipo_juego == 'TANK' and obj == 'ENEMY':
             player = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
@@ -603,42 +594,29 @@ class Juego:
                 self.enemy_movement(player, e)
             return
 
-        if self.tipo_juego == 'TANK':
+        if self.tipo_juego == 'TANK' or self.tipo_juego == 'SNAKE':
             for i in self.entities[obj].keys():
                 if forward: dire = self.entities[obj][i]['dir']
                 self.entities[obj][i]['pos'][0] += dire[0]
                 self.entities[obj][i]['pos'][1] += dire[1]
                 self.entities[obj][i]['dir'] = dire
 
-        if self.tipo_juego == 'SNAKE': self.serpiente_direccion = dire
-
-    def tetris_rotar_pieza(self):
-        if not self.pieza_actual: return
-        nueva_rotacion = (self.pieza_rotacion + 1) % len(self.pieza_actual)
-        if not self.tetris_verificar_colision(self.pieza_x, self.pieza_y, nueva_rotacion):
-            self.pieza_rotacion = nueva_rotacion
 
     def tetris_fijar_pieza(self):
-        if not self.entities['PLAYER']:
-            return
-
+        if not self.entities['PLAYER']: return
         key = self.entities['PLAYER'].keys()[0]
         e = self.entities['PLAYER'][key]
 
         matriz_pieza = e['estados'][e['config']['state_rotation']]
-
         for y_offset, fila in enumerate(matriz_pieza):
             for x_offset, celda in enumerate(fila):
                 if celda == 1:
                     x = e['pos'][0] + x_offset
                     y = e['pos'][1] + y_offset
-
                     if 0 <= x < self.ancho and 0 <= y < self.alto:
                         self.grid[y][x] = 1
-
-    # eliminar la pieza activa
+        # eliminar la pieza activa
         self.entities['PLAYER'].pop(key)
-
         self.tetris_limpiar_lineas()
         self.ejecutar_evento('ON_START')
 
@@ -654,9 +632,7 @@ class Juego:
         return False
 
     def tetris_limpiar_lineas(self):
-
         nuevo_grid = [fila for fila in self.grid if not all(fila)]
-
         lineas_limpias = self.alto - len(nuevo_grid)
 
         if lineas_limpias > 0:
@@ -666,32 +642,17 @@ class Juego:
         if self.power:
             if random.randint(1, 100) <= 10:
                 self.boost_xp = True
-
                 self.tiempo_boost = time.time()
                 self.velocidad_gravedad = 0.08
-
             # DAR PUNTOS
             if self.boost_xp:
-                self.puntuacion += (
-                    self.puntos_boost * lineas_limpias
-                )
-
+                self.puntuacion += self.puntos_boost * lineas_limpias
             else:
-                self.puntuacion += (
-                    self.puntos_normales * lineas_limpias
-                )
+                self.puntuacion += self.puntos_normales * lineas_limpias
 
         for _ in range(lineas_limpias):
             self.ejecutar_evento('ON_LINE_CLEAR')
     
-    def snake_spawn_jugador(self, accion):
-        coords = accion['params'][0] if accion['params'] else [self.ancho / 2, self.alto / 2]
-        self.serpiente_cuerpo = [(coords[0], coords[1])]
-        self.serpiente_dirs = [(1,0)]
-        self.serpiente_config = self.datos_juego['shapes']['PIXEL']['config']
-        self.serpiente_direccion = (1, 0)
-        if self.level == 'NYAN_CAT':
-            self.generar_obstaculos()
 
     def generar_obstaculos(self):
         self.obstaculos = []
