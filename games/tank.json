@@ -128,14 +128,15 @@
   }, 
   "tipo_juego": "TANK", 
   "config": {
-    "levels": null, 
     "target_score": "700", 
     "grid_size": [
       30, 
       30
     ], 
-    "power": null, 
-    "power_time": null
+    "power": 0, 
+    "wall_collision": "OFF", 
+    "power_time": 0, 
+    "levels": "BABY"
   }, 
   "events": {
     "ON_RANDOM": [

@@ -23,14 +23,15 @@
   }, 
   "tipo_juego": "SNAKE", 
   "config": {
-    "levels": "BABY", 
-    "target_score": null, 
+    "target_score": 100000000, 
     "grid_size": [
       18, 
       18
     ], 
     "power": "ON", 
-    "power_time": "2"
+    "wall_collision": 1, 
+    "power_time": "2", 
+    "levels": "NYAN_CAT"
   }, 
   "events": {
     "ON_KEY_DOWN": [
@@ -131,6 +132,11 @@
         ], 
         "accion": "SPAWN", 
         "objeto": "FOOD"
+      }, 
+      {
+        "params": [], 
+        "accion": "SPAWN", 
+        "objeto": "WALLS"
       }
     ], 
     "ON_POWERUP": [

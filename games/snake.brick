@@ -2,7 +2,7 @@
 GAME_TYPE SNAKE
 
 GAME_GRID (18, 18)
-LEVELS BABY
+LEVELS NYAN_CAT
 POWER ON
 POWER_TIME 2
 
@@ -17,6 +17,7 @@ END
 ON START:
   SPAWN PLAYER AT (9, 9)
   SPAWN FOOD AT RANDOM
+  SPAWN WALLS
 END
 
 # ON_TICK es un evento que se ejecuta en cada ciclo del juego

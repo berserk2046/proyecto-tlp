@@ -61,9 +61,14 @@ class Parser:
         alto = int(self.consumir())
         self.consumir(')')
         self.ast['config']['grid_size'] = [ancho, alto]
-        list_config = ['POWER', 'LEVELS', 'POWER_TIME', 'TARGET_SCORE']
+        list_config = ['POWER', 'LEVELS', 'POWER_TIME', 'TARGET_SCORE', 'WALL_COLLISION']
         for i in list_config:
-            self.ast['config'][i.lower()] = None
+            if i == 'POWER': self.ast['config'][i.lower()] = 0
+            elif i == 'WALL_COLLISION': self.ast['config'][i.lower()] = 1
+            elif i == 'LEVELS': self.ast['config'][i.lower()] = 'BABY'
+            elif i == 'TARGET_SCORE': self.ast['config'][i.lower()] = 100000000
+            elif i == 'POWER_TIME': self.ast['config'][i.lower()] = 0
+            else: self.ast['config'][i.lower()] = None
         while self.posicion < len(self.tokens) and self.tokens[self.posicion] in list_config:
             key = self.consumir()
             self.ast['config'][key.lower()] = self.consumir()

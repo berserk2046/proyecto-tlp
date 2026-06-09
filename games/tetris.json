@@ -562,14 +562,15 @@
   }, 
   "tipo_juego": "TETRIS", 
   "config": {
-    "levels": null, 
-    "target_score": null, 
+    "target_score": 100000000, 
     "grid_size": [
       10, 
       20
     ], 
     "power": "NO", 
-    "power_time": "10"
+    "wall_collision": 1, 
+    "power_time": "10", 
+    "levels": "BABY"
   }, 
   "events": {
     "ON_KEY_DOWN": [

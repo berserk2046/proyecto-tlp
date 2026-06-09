@@ -20,10 +20,11 @@ class Juego:
         self.ancho = config.get('grid_size', [10, 20])[0]
         self.alto = config.get('grid_size', [10, 20])[1]
         self.grid = [[0 for _ in range(self.ancho)] for _ in range(self.alto)]
-        self.power = config.get('power', 0)
-        self.target_score = config.get('target_score', 1000000)
-        self.duracion_poder = config.get('power_time', 0)
-        self.level = config.get('levels', 'BABY')
+        self.wall_collision = config.get('wall_collision')
+        self.power = config.get('power')
+        self.target_score = config.get('target_score')
+        self.duracion_poder = config.get('power_time')
+        self.level = config.get('levels')
         self.puntuacion = 0
         self.juego_terminado = False
         self.juego_ganado = False
@@ -31,7 +32,7 @@ class Juego:
 
         # -- Checkeo variables dadas por BRICK -- #
         if self.power == 'ON': self.power = 1
-        else: self.power = 0
+        if self.wall_collision == 'OFF': self.wall_collision = 0
         if self.level not in ['BABY', 'ENTUSIASTA', 'NYAN_CAT']: self.level = 'BABY'
         if self.duracion_poder != None: self.duracion_poder = int(self.duracion_poder)
         if self.target_score != None:
@@ -70,6 +71,7 @@ class Juego:
         self.root.bind('<Key>', self.manejar_input_gui)
 
         self.entities = {'PLAYER': {}, 'ENEMY': {}, 'ITEM': {}, 'COMIDA': {}, 'BOSS': {}}
+        self.entities_counter = {'PLAYER': 0, 'ENEMY': 0, 'ITEM': 0, 'COMIDA': 0, 'BOSS': 0}
         self.items = {}
         self.directions = {'UP': [0,-1], 'DOWN': [0,1], 'RIGHT': [1,0], 'LEFT': [-1,0]}
 
@@ -79,21 +81,13 @@ class Juego:
 
         
         if self.tipo_juego == 'TETRIS':
-            self.pieza_x, self.pieza_y, self.pieza_rotacion = 0,0,0
             self.velocidad_gravedad = 0.2
-            # BOOST XP
             self.boost_xp = False
             self.tiempo_boost = 0
             self.puntos_normales = 100
             self.puntos_boost = 300
         
         if self.tipo_juego == 'SNAKE':
-            self.serpiente_cuerpo = []
-            self.serpiente_config = {}
-            self.serpiente_direccion = (1, 0)
-            self.posicion_comida = None
-            self.posicion_bcomida = None
-            self.posicion_ycomida = None
             self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.05
             self.invencible = False
             self.tiempo_invencible = 0
@@ -109,7 +103,6 @@ class Juego:
             self.velocidad_gravedad = 0.15
 
 
-        self.entity_counter = 0
         self.tick_counter = 0
         # Basura global para eliminar elementos de entities sin inconvenientes
         self.to_remove = []
@@ -174,7 +167,7 @@ class Juego:
             if time.time() - self.tiempo_invencible >= self.duracion_poder:
                 self.invencible = False
         if self.tipo_juego == 'SNAKE' and self.invulnerable_obstaculo:
-            if time.time() - self.tiempo_obstaculo >= 2:
+            if time.time() - self.tiempo_obstaculo >= 4:
                 self.invulnerable_obstaculo = False
 
         self.dibujar()
@@ -213,9 +206,7 @@ class Juego:
         
         COLOR_SNAKE_CABEZA = '#00FF00' # Verde brillante
         COLOR_SNAKE_CUERPO = '#33CC33' # Verde normal
-        COLOR_FOOD = '#FF0000'      # Rojo
-        COLOR_BFOOD = '#8A0BD2'     # morado
-        COLOR_PFOOD = '#FFD700'     # DOrado
+        power_color = '#FFD700'     # DOrado
         
         # 1. Dibujar la cuadricula estatica (grid base)
         for y in range(self.alto):
@@ -233,38 +224,16 @@ class Juego:
 
             for j in self.entities[i].keys():
                 e = self.entities[i][j]
-                if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
                 if e['config']['color'] != None: COLOR_PIEZA = "#" + e['config']['color']
+                if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
+                if self.tipo_juego == 'SNAKE' and self.invencible: COLOR_PIEZA = power_color
+                if self.level == 'NYAN_CAT' and j != self.shapes[i].keys()[0] + '0': COLOR_PIEZA = '#%02x%02x%02x' % (random.randint(0,255), random.randint(0,255), random.randint(0,255))
                 matriz_pieza = e['estados'][e['config']['state_rotation']]
                 for y_offset, fila in enumerate(matriz_pieza):
                     for x_offset, celda in enumerate(fila):
                         if celda == 1:
                             self.dibujar_celda(e['pos'][0] + x_offset, e['pos'][1] + y_offset, COLOR_PIEZA, e['config']['style'], e['dir'])
 
-        # 3. Dibujar Snake y Comida
-        if self.tipo_juego == 'SNAKE':
-            # Comida
-            if self.level == 'NYAN_CAT':
-                for x, y in self.obstaculos:
-                    self.dibujar_celda(x, y, '#777777')
-            if self.posicion_bcomida:
-                x, y = self.posicion_bcomida
-                self.dibujar_celda(x, y, COLOR_FOOD)
-            if self.posicion_ycomida:
-                x, y = self.posicion_ycomida
-                self.dibujar_celda(x, y, COLOR_PFOOD)
-            # Cuerpo de la Serpiente
-            for i, segmento in enumerate(self.serpiente_cuerpo):
-                x, y = segmento
-                direction = self.serpiente_dirs[i]
-                style = 'CAT' if self.level == 'NYAN_CAT' and i==0 else self.serpiente_config['style']
-                if self.level == 'NYAN_CAT':
-                    color = COLOR_SNAKE_CABEZA if i == 0 else '#%02x%02x%02x' % (random.randint(0,255), random.randint(0,255), random.randint(0,255))
-                else:
-                    color = COLOR_SNAKE_CABEZA if i == 0 else COLOR_SNAKE_CUERPO
-                if self.invencible:
-                    color = '#FFD700'
-                self.dibujar_celda(x, y, color, style, direction)
 
     def dibujar_celda(self, x, y, color, style=None, direction=None):
         ts = self.taman_celda # Alias para taman de celda
@@ -304,11 +273,10 @@ class Juego:
 
                 if self.tipo_juego == 'TETRIS':
                     if verbo == 'SPAWN': self.spawn_shape(objeto, param[0])
-                    if verbo == 'MOVE': self.mover_pieza(param[0])
-                    if verbo == 'ROTATE': self.mover_pieza(verbo)
+                    if verbo == 'MOVE': self.mover_pieza('PLAYER', param[0])
+                    if verbo == 'ROTATE': self.mover_pieza('PLAYER', verbo)
 
                 if self.tipo_juego == 'TANK':
-
                     if verbo == 'SPAWN': self.spawn_shape(objeto, param[0])
                     if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'REMOVE': self.to_remove.append([objeto, obj])
@@ -319,9 +287,8 @@ class Juego:
                 
                 if self.tipo_juego == 'SNAKE':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_shape(objeto, param[0])
-                    if verbo == 'SPAWN' and objeto == 'FOOD': self.snake_spawn_comida()
-                    if verbo == 'SPAWN' and objeto == 'BFOOD': self.snake_spawn_bcomida()
-                    if verbo == 'SPAWN' and objeto == 'YFOOD': self.snake_spawn_ycomida()
+                    if verbo == 'SPAWN' and objeto == 'WALLS': self.generar_obstaculos()
+                    if verbo == 'SPAWN' and objeto in ['FOOD', 'BFOOD', 'YFOOD']: self.snake_spawn_comida(objeto, param[0])
                     if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'SET_DIRECTION': self.mover_pieza(objeto)
                     if verbo == 'GROW': self.snake_crecer(param[0])
@@ -377,17 +344,20 @@ class Juego:
 
         if obj != 'COMIDA':
             i = self.probabilidad_ponderada(obj)
-            shape_name = i+str(self.entity_counter)
+            if self.tipo_juego == 'SNAKE': i = self.shapes[obj].keys()[0]
+            shape_name = i+str(self.entities_counter[obj])
             entity = self.entities[obj][shape_name] = dict(self.shapes[obj][i])
+            entity['config'] = dict(self.shapes[obj][i]['config'])
             if obj != 'ITEM':
                 entity['config']['hp'] = int(entity['config']['hp'])
             entity['config']['dmg'] = int(entity['config']['dmg'])
+            # Parameters for SNAKE type game
+            if self.level == 'NYAN_CAT'and self.entities_counter[obj]==0: self.entities[obj][shape_name]['config']['style'] = 'CAT'
         else:
-            shape_name = obj+str(self.entity_counter)
+            shape_name = obj+str(self.entities_counter[obj])
             entity = self.entities[obj][shape_name] = {'pos': [], 'regen': 50, 'config': {'type': 'COMIDA', 'color': "FFD700", 'style': 'CIRCLE'}}
 
-            
-        self.entity_counter += 1
+        self.entities_counter[obj] += 1
         if param == 'RANDOM':
             while True:
                 x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
@@ -420,13 +390,15 @@ class Juego:
 
         elif param == None:
             if self.tipo_juego == 'TETRIS':
-                self.entities[obj][shape_name]['pos'] = [self.ancho/2 - 2, 0]
-                self.entities[obj][shape_name]['dir'] = [0, 1]
-            else: self.entities[obj][shape_name]['pos'] = [self.ancho/2, self.alto/2]
+                entity['pos'] = [self.ancho/2 - 2, 0]
+                entity['dir'] = [0, 1]
+            else: entity['pos'] = [self.ancho/2, self.alto/2]
         else:
-            self.entities[obj][shape_name]['pos'] = param
-            self.entities[obj][shape_name]['dir'] = [0,1]
-                
+            entity['pos'] = param
+            entity['dir'] = [0,1]
+
+        if self.tipo_juego == 'TETRIS' and self.tetris_verificar_colision(entity['pos'][0], entity['pos'][1], entity['config']['state_rotation']):
+            self.juego_terminado = True
 
     def enemy_movement(self, player, enemy):
         x, y = player['pos'][0] - enemy['pos'][0], player['pos'][1] - enemy['pos'][1]
@@ -445,8 +417,8 @@ class Juego:
         for i in self.entities[obj].keys():
             e = self.entities[obj][i]
             x, y = e['pos']
-            if (x < 0 or x > self.ancho) or (y < 0 or y > self.alto):
-                if e['config']['type'] == 'PLAYER':
+            if not ((0 < x < self.ancho) or (0 < y < self.alto)):
+                if not self.wall_collision:
                     if x < 0: e['pos'][0] = 0
                     if x > self.ancho-1: e['pos'][0] = self.ancho-1
                     if y < 0: e['pos'][1] = 0
@@ -492,9 +464,22 @@ class Juego:
                             if j['entity']['config']['hp'] <= 0: self.ejecutar_evento('ON_WIN')
 
                     if j['entity']['config']['type'] == 'COMIDA':
+                        if self.tipo_juego == 'SNAKE':
+                            if j['entity']['ftype'] == 'food': 
+                                self.ejecutar_evento('ON_EAT_FOOD')
+                                if self.level == 'ENTUSIASTA' and random.randint(0,100) <= 100:
+                                    self.ejecutar_evento('ON_DIFD')
+                                    if random.randint(0,100) <= 100 and self.power: self.ejecutar_evento('ON_POWERUP')
+                            if j['entity']['ftype'] == 'bfood': self.ejecutar_evento('ON_EAT_BFOOD')
+                            if j['entity']['ftype'] == 'yfood':
+                                self.ejecutar_evento('ON_EAT_YFOOD')
+                                self.invencible = True
+                                self.tiempo_invencible = time.time()
+
                         if e['config']['hp'] <= 50: e['config']['hp'] += j['entity']['regen']
                         if e['config']['hp'] > 50: e['config']['hp'] = 100 
                         self.to_remove.append(['COMIDA', j['key']])
+
                     if j['entity']['config']['type'] == 'ENEMY':
                         e['config']['hp'] -= j['entity']['config']['dmg']
                         j['entity']['config']['hp'] -= e['config']['dmg']
@@ -552,11 +537,11 @@ class Juego:
         dire = None
         forward = 0
 
-        # If move related bugs arise, look at this portion
-        if direccion == None:
+        if direccion == None: #This if only works for SET_DIRECTION command that is only used in snake.
             direccion = obj
             obj = 'PLAYER' #In set_direction command just set default to player object
-            self.entities[obj][self.entities[obj].keys()[0]]['dir'] = self.directions[direccion]
+            shape_name = self.shapes[obj].keys()[0]
+            self.entities[obj][shape_name+'0']['dir'] = self.directions[direccion]
             return
         if direccion == 'ROTATE':
             for i in self.entities[obj].keys():
@@ -566,7 +551,6 @@ class Juego:
             return
         if direccion not in self.directions or direccion == 'FORWARD': forward = 1
         else: dire = self.directions[direccion]
-        # End of portion
 
         if self.tipo_juego == 'TETRIS':
             e = self.entities[obj][self.entities[obj].keys()[0]]
@@ -576,31 +560,72 @@ class Juego:
             elif self.tipo_juego == 'TETRIS' and dire[1] > 0:
                 self.tetris_fijar_pieza()       
 
-        if self.tipo_juego == 'TANK' and obj == 'ENEMY':
+        if self.tipo_juego == 'TANK' and obj == 'ENEMY' or obj == 'BOSS':
             player = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
-            for i in self.entities['ENEMY'].keys():
-                e = self.entities['ENEMY'][i]
+            for i in self.entities[obj].keys():
+                e = self.entities[obj][i]
                 speed = int(e['config']['velocity'])
                 if self.tick_counter % speed == 0:
                     self.enemy_movement(player, e)
                 else: continue
             return
 
-        if self.tipo_juego == 'TANK' and obj == 'BOSS':
-            player = self.entities['PLAYER'][(self.entities['PLAYER'].keys())[0]]
-            e = self.entities['BOSS'][self.entities['BOSS'].keys()[0]]
-            speed = int(e['config']['velocity'])
-            if self.tick_counter % speed == 0:
-                self.enemy_movement(player, e)
-            return
-
-        if self.tipo_juego == 'TANK' or self.tipo_juego == 'SNAKE':
+        if self.tipo_juego == 'TANK':
             for i in self.entities[obj].keys():
                 if forward: dire = self.entities[obj][i]['dir']
                 self.entities[obj][i]['pos'][0] += dire[0]
                 self.entities[obj][i]['pos'][1] += dire[1]
                 self.entities[obj][i]['dir'] = dire
 
+        if self.tipo_juego == 'SNAKE':
+            shape_name = self.shapes['PLAYER'].keys()[0]
+            head = self.entities['PLAYER'][shape_name+'0']
+
+            new_x = head['pos'][0] + head['dir'][0]
+            new_y = head['pos'][1] + head['dir'][1]
+            
+            if not (0 <= new_x < self.ancho and 0 <= new_y < self.alto):
+                if not self.wall_collision or self.invencible:
+                    new_x = new_x % self.ancho
+                    new_y = new_y % self.alto
+                elif self.level == 'NYAN_CAT' and self.puntuacion > 0:
+                    self.ejecutar_evento('ON_COLLISION_WALL_NYAN')
+                    head['dir'] = [head['dir'][0]*-1, head['dir'][1]*-1]
+                    new_x = head['pos'][0] + head['dir'][0]
+                    new_y = head['pos'][1] + head['dir'][1]
+                else:
+                    self.ejecutar_evento('ON_COLLISION_WALL')
+                    return
+
+            if self.grid[new_y][new_x] == 1:
+                if not self.invulnerable_obstaculo and self.puntuacion > 0:
+                    self.ejecutar_evento('ON_COLLISION_WALL_NYAN')
+                    head['dir'] = [head['dir'][0] * -1, head['dir'][1] * -1]
+                    new_x = head['pos'][0] + head['dir'][0]
+                    new_y = head['pos'][1] + head['dir'][1]
+                else:
+                    self.ejecutar_evento('ON_COLLISION_WALL')
+                    return
+
+            keys = self.entities['PLAYER'].keys()
+            old_positions = []
+
+            for i in range(self.entities_counter['PLAYER']):
+                old_positions.append(list(self.entities['PLAYER'][shape_name+str(i)]['pos']))
+            
+            head['pos'] = [new_x, new_y]
+            
+            for i in range(1, self.entities_counter['PLAYER']):
+                self.entities['PLAYER'][shape_name+str(i)]['pos'] = old_positions[i-1]
+            
+            for k in keys:
+                if k == shape_name+'0': continue
+                if self.entities['PLAYER'][k]['pos'] == head['pos']:
+                    self.ejecutar_evento('ON_COLLISION_SELF')
+                    return
+            
+        self.obj_collision('PLAYER')
+        return
 
     def tetris_fijar_pieza(self):
         if not self.entities['PLAYER']: return
@@ -640,7 +665,7 @@ class Juego:
 
         # ACTIVAR BOOST XP RANDOM
         if self.power:
-            if random.randint(1, 100) <= 10:
+            if random.randint(1, 100) <= 12:
                 self.boost_xp = True
                 self.tiempo_boost = time.time()
                 self.velocidad_gravedad = 0.08
@@ -652,118 +677,65 @@ class Juego:
 
         for _ in range(lineas_limpias):
             self.ejecutar_evento('ON_LINE_CLEAR')
-    
 
     def generar_obstaculos(self):
-        self.obstaculos = []
+        shape_name = self.shapes['PLAYER'].keys()[0]
         for i in range(8):
             x = random.randint(2, self.ancho - 3)
             y = random.randint(2, self.alto - 3)
-
-            if (x, y) not in self.serpiente_cuerpo and (x,y) != self.posicion_comida:
-                self.obstaculos.append((x, y))    
-
-    def snake_spawn_comida(self):
-        while True:
-            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
-            if (x, y) not in self.serpiente_cuerpo:
-                self.spawn_shape('COMIDA', 'RANDOM')
-                print(self.entities['COMIDA'])
-                self.entities['COMIDA']['COMIDA'+str(self.entity_counter-1)]['config']['color'] = "8A0BD2"
-                break
-
-    def snake_spawn_bcomida(self):
-        while True:
-            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
-            if (x, y) not in self.serpiente_cuerpo and (x, y) != self.posicion_comida:
-                self.posicion_bcomida = (x, y)
-                break
-
-    def snake_spawn_ycomida(self):
-        while True:
-            x, y = random.randint(0, self.ancho - 1), random.randint(0, self.alto - 1)
-            if (x, y) not in self.serpiente_cuerpo and (x, y) != self.posicion_comida and (x, y) != self.posicion_bcomida:
-                self.posicion_ycomida = (x, y)
-                break
-                
-    def snake_mover_jugador(self):
-        if not self.serpiente_cuerpo: return
-        cabeza_x, cabeza_y = self.serpiente_cuerpo[0]
-        dir_x, dir_y = self.serpiente_direccion
-        nueva_cabeza = (cabeza_x + dir_x, cabeza_y + dir_y)
-
-        if self.invencible:
-            x, y = nueva_cabeza
-            if x < 0:
-                x = self.ancho - 1
-            elif x >= self.ancho:
-                x = 0
-            if y < 0:
-                y = self.alto - 1
-            elif y >= self.alto:
-                y = 0
-            nueva_cabeza = (x, y)
-        else:
-            if not (0 <= nueva_cabeza[0] < self.ancho and 0 <= nueva_cabeza[1] < self.alto):
-                if self.level == 'NYAN_CAT' and self.puntuacion > 0:
-                    self.ejecutar_evento('ON_COLLISION_WALL_NYAN')
-                    self.serpiente_direccion = (dir_x*-1, dir_y*-1)
-                else:
-                    self.ejecutar_evento('ON_COLLISION_WALL')
-                    return
-        if nueva_cabeza in self.obstaculos:
-            if not self.invulnerable_obstaculo:
-                if self.puntuacion > 0:
-                    self.ejecutar_evento('ON_COLLISION_WALL_NYAN')
-                    self.invulnerable_obstaculo = True
-                    self.tiempo_obstaculo = time.time()
-                else:
-                    self.juego_terminado = True
-            return
-        if not self.invencible and nueva_cabeza in self.serpiente_cuerpo[:-1]:
-            self.ejecutar_evento('ON_COLLISION_SELF')
-            return
-
-        self.serpiente_cuerpo.insert(0, nueva_cabeza)
-        self.serpiente_dirs.insert(0, self.serpiente_direccion)
-        self.serpiente_cuerpo.pop()
-        self.serpiente_dirs.pop()
-
-        if nueva_cabeza == self.posicion_bcomida:
-            self.ejecutar_evento('ON_EAT_BFOOD')
-            self.posicion_bcomida = None
-
-        if nueva_cabeza == self.posicion_ycomida:
-            self.ejecutar_evento('ON_EAT_YFOOD')
-            self.posicion_ycomida = None
-            self.invencible = True
-            self.tiempo_invencible = time.time()
-
-        if nueva_cabeza == self.posicion_comida:
-            self.ejecutar_evento('ON_EAT_FOOD')
-            if self.level == 'ENTUSIASTA' and random.randint(0,100) <= 50:
-                self.ejecutar_evento('ON_DIFD')
-                if random.randint(0,100) <= 100 and self.power: self.ejecutar_evento('ON_POWERUP')
+            if (x, y) not in self.entities['PLAYER'][shape_name+'0'] and (x,y) != self.entities['COMIDA']['COMIDA0']:
+                self.grid[y][x] = 1
 
     def snake_crecer(self, objeto):
         for i in range(int(objeto)):
-            self.serpiente_cuerpo.append(self.serpiente_cuerpo[-1])
-            self.serpiente_dirs.append(self.serpiente_dirs[-1])
+            shape_name = self.shapes['PLAYER'].keys()[0]
+            # This if block works because first entity at spawn is always player
+            key = shape_name + str(self.entities_counter['PLAYER']-1)
+            tail_pos = list(self.entities['PLAYER'][key]['pos'])
+            tail_dir = list(self.entities['PLAYER'][key]['dir'])
+            self.spawn_shape('PLAYER', tail_pos)
+            key = shape_name + str(self.entities_counter['PLAYER']-1)
+            self.entities['PLAYER'][key]['dir'] = tail_dir
 
     def snake_decrease(self, objeto):
+        shape_name = self.shapes['PLAYER'].keys()[0]
+        keys = self.entities['PLAYER'].keys()
         if objeto == 'ALL':
-            del self.serpiente_cuerpo[1:]
-            del self.serpiente_dirs[1:]
+            for k in keys:
+                if k == shape_name+'0':continue
+                self.to_remove.append(['PLAYER', k])
+            self.entities_counter['PLAYER'] = 1
         else:
             for i in range(int(objeto)):
-                if len(self.serpiente_cuerpo) > 1:
-                    self.serpiente_cuerpo.pop()
-                    self.serpiente_dirs.pop()
+                if len(keys) > 1:
+                    self.to_remove.append(['PLAYER', shape_name+str(self.entities_counter['PLAYER']-1)])
+                    self.entities_counter['PLAYER'] -= 1
                 else:
                     self.ejecutar_evento('ON_COLLISION_WALL')
                     break
 
+        if self.to_remove:
+            seen = set()
+            for i in self.to_remove:
+                p = (i[0], i[1])
+                if p not in seen and p[1] in self.entities[p[0]]:
+                    self.entities[i[0]].pop(i[1])
+                    seen.add(p)
+            self.to_remove = []
 
+    def snake_spawn_comida(self, tipo, param):
+        self.spawn_shape('COMIDA', param)
+        food = self.entities['COMIDA']['COMIDA'+str(self.entities_counter['COMIDA']-1)]
+        if tipo == 'FOOD':
+            food['config']['color'] = "FF0000"
+            food['ftype'] = tipo.lower()
+        elif tipo == 'BFOOD':
+            food['config']['color'] = "8A0BD2"
+            food['ftype'] = tipo.lower()
+        elif tipo == 'YFOOD':
+            food['config']['color'] = "FFD700"
+            food['ftype'] = tipo.lower()
+               
     # METODOS DE SALIDA (ADAPTADOS A GUI)
     # -----------------------------------
 
