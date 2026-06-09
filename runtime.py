@@ -293,9 +293,8 @@ class Juego:
                     if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'REMOVE': self.to_remove.append([objeto, obj])
                     if verbo == 'CHECK_OBJ_COLLISION': self.obj_collision(objeto)
-                    if verbo == 'CHECK_COLLISIONS': self.check_collisions()
                     if verbo == 'TRASLADE': self.traslade(objeto, param[0])
-                    if verbo == 'LEVELS' and objeto == 'FINAL': self.final_level()
+                    if verbo == 'STAGE' and objeto == 'FINAL': self.final_level()
                 
                 if self.tipo_juego == 'SNAKE':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_shape(objeto, param[0])
@@ -534,10 +533,6 @@ class Juego:
                     self.entities[i[0]].pop(i[1])
                     seen.add(p)
             self.to_remove = []
-
-    def check_collisions(self):
-        for i in self.entities.keys():
-            self.obj_collision(i)
 
     def mover_pieza(self, obj, direccion=None):
         if self.final_boss and obj not in ['PLAYER', 'ITEM', 'BOSS']: return

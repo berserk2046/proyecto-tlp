@@ -1,0 +1,64 @@
+<programa> ::= <tipo_juego> <grid> <config_extra>* <definiciones> <eventos>
+
+<tipo_juego> ::= "GAME_TYPE" ("SNAKE" | "TANK" | "TETRIS")
+
+<grid> ::= "GAME_GRID" <coordenadas>
+
+<config_extra> ::= "POWER"        <boolean>
+               | "POWER_TIME"   <numero>
+               | "LEVELS"       <identificador>
+               | "TARGET_SCORE" <numero>
+               | "WALL_COLLISION" <boolean>
+
+<definiciones> ::= <definicion_shape>+
+
+<definicion_shape> ::= "DEFINE" "SHAPE" <identificador> ":" <configuracion>* <estados>+ "END"
+
+<configuracion> ::= ("COLOR" | "CHANCE" | "STYLE" | "HP" | "DMG"
+                 | "TYPE" | "VELOCITY" | "STATE_ROTATION") ":" <valor>
+
+<estados> ::= <estado>+
+<estado>  ::= "STATE" <numero> ":" <matriz>
+<matriz>  ::= <fila>+
+<fila>    ::= "[" <numero> ("," <numero>)* "]"
+
+<eventos> ::= <evento>+
+<evento>  ::= "ON" <nombre_evento> ":" <accion>+ "END"
+
+<nombre_evento> ::= "START" | "TICK" | "STICK" | "RANDOM"
+                 | "LINE_CLEAR" | "EAT_FOOD" | "EAT_BFOOD" | "EAT_YFOOD"
+                 | "COLLISION_WALL" | "COLLISION_WALL_NYAN" | "COLLISION_SELF"
+                 | "COLLISION" | "ENEMY_DIED" | "WIN" | "TARGET_SCORE"
+                 | "POWERUP" | "DIFD"
+                 | "KEY_UP" | "KEY_DOWN" | "KEY_LEFT" | "KEY_RIGHT" | "KEY_RETURN"
+
+<accion> ::= "GAME_OVER"
+           | "GAME_WIN"
+           | "INCREASE_SCORE" <numero>
+           | "DECREASE_SCORE" <numero>
+           | "SET_SCORE"      <numero>
+           | "SPAWN"    <entidad> ("AT" <ubicacion>)?
+           | "MOVE"     <entidad> (<direccion> | "FORWARD" | "ROTATE")
+           | "SET_DIRECTION" <direccion>
+           | "REMOVE"   <entidad>
+           | "GROW"     <entidad> <numero>
+           | "DECREASE" <entidad> (<numero> | "ALL")
+           | "TRASLADE" <entidad> "AT" <coordenadas>
+           | "CALL"     <nombre_evento>
+           | "STAGE"    "FINAL"
+
+<ubicacion> ::= <coordenadas> | "RANDOM" | <entidad>
+<coordenadas> ::= "(" <numero> "," <numero> ")"
+
+<entidad> ::= "PLAYER" | "ENEMY" | "ITEM" | "BOSS"
+            | "COMIDA" | "FOOD" | "BFOOD" | "YFOOD"
+            | "RANDOM_SHAPE" | "CURRENT_PIECE"
+
+<direccion> ::= "UP" | "DOWN" | "LEFT" | "RIGHT"
+<valor>     ::= <identificador> | <numero>
+<boolean>   ::= "ON" | "OFF"
+
+<identificador> ::= <letra>+
+<numero>        ::= <digito>+
+<letra>         ::= "A"..."Z" | "_"
+<digito>        ::= "0"..."9"

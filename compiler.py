@@ -80,7 +80,7 @@ class Parser:
         self.consumir(':')
 
         config = {}
-        list_config = ['COLOR', 'CHANCE', 'STYLE', 'COLLISION', 'HP', 'TYPE', 'DMG', 'VELOCITY', 'STATE_ROTATION']
+        list_config = ['COLOR', 'CHANCE', 'STYLE', 'HP', 'TYPE', 'DMG', 'VELOCITY', 'STATE_ROTATION']
         # Default values
         for i in list_config:
             if i == 'TYPE': config[i.lower()] = 'PLAYER'
@@ -147,7 +147,7 @@ class Parser:
                     self.consumir(')')
                     params.append([x, y])
                 else: params.append(self.consumir())
-            elif self.posicion < len(self.tokens) and self.tokens[self.posicion] not in ['END', 'ON', 'DEFINE', 'SPAWN', 'MOVE', 'ROTATE', 'INCREASE_SCORE', 'SET_DIRECTION', 'GAME_OVER', 'DECREASE_SCORE', 'GROW', 'DECREASE', 'REMOVE', 'CHECK_OBJ_COLLISION', 'CHECK_COLLISIONS', 'LEVELS']:
+            elif self.posicion < len(self.tokens) and self.tokens[self.posicion] not in ['END', 'ON', 'DEFINE', 'SPAWN', 'MOVE', 'ROTATE', 'INCREASE_SCORE', 'SET_DIRECTION', 'GAME_OVER', 'DECREASE_SCORE', 'GROW', 'DECREASE', 'REMOVE', 'CHECK_OBJ_COLLISION', 'STAGE', 'CALL', 'GAME_WIN', 'TRASLADE']:
                 params.append(self.consumir())
             acciones.append({'accion': verbo, 'objeto': objeto, 'params': params})
         self.consumir('END')
