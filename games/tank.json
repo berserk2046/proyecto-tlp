@@ -14,7 +14,6 @@
         "color": "998400", 
         "hp": "100", 
         "state_rotation": 0, 
-        "collision": null, 
         "chance": null, 
         "velocity": "5", 
         "type": "ENEMY"
@@ -34,7 +33,6 @@
         "color": "110000", 
         "hp": 100, 
         "state_rotation": 0, 
-        "collision": null, 
         "chance": null, 
         "velocity": 1, 
         "type": "ITEM"
@@ -54,7 +52,6 @@
         "color": "000099", 
         "hp": "300", 
         "state_rotation": 0, 
-        "collision": null, 
         "chance": null, 
         "velocity": "10", 
         "type": "ENEMY"
@@ -74,7 +71,6 @@
         "color": null, 
         "hp": "100", 
         "state_rotation": 0, 
-        "collision": null, 
         "chance": null, 
         "velocity": 1, 
         "type": "PLAYER"
@@ -99,7 +95,6 @@
         "color": "000000", 
         "hp": "2000", 
         "state_rotation": 0, 
-        "collision": null, 
         "chance": null, 
         "velocity": "5", 
         "type": "BOSS"
@@ -119,7 +114,6 @@
         "color": "009900", 
         "hp": "50", 
         "state_rotation": 0, 
-        "collision": null, 
         "chance": null, 
         "velocity": "3", 
         "type": "ENEMY"
@@ -237,7 +231,7 @@
     "ON_TARGET_SCORE": [
       {
         "params": [], 
-        "accion": "LEVELS", 
+        "accion": "STAGE", 
         "objeto": "FINAL"
       }, 
       {

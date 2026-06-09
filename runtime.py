@@ -88,7 +88,7 @@ class Juego:
             self.puntos_boost = 300
         
         if self.tipo_juego == 'SNAKE':
-            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.005
+            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.08
             self.obstaculos = 0
             self.invencible = False
             self.tiempo_invencible = 0
@@ -172,13 +172,13 @@ class Juego:
             if time.time() - self.tiempo_obstaculo >= 4:
                 self.invulnerable_obstaculo = False
 
-        if self.tipo_juego == 'SNAKE':
-            if 0 < self.puntuacion < 60: self.level = 'BABY'
-            if 60 <= self.puntuacion < 200: self.level = 'ENTUSIASTA'
-            if 200 <= self.puntuacion:
+        if self.tipo_juego == 'SNAKE' and self.level != 'NYAN_CAT':
+            if 0 < self.puntuacion < 40: self.level = 'BABY'
+            if 40 <= self.puntuacion < 150: self.level = 'ENTUSIASTA'
+            if 150 <= self.puntuacion:
                 self.generar_obstaculos()
                 self.level = 'NYAN_CAT'
-                self.velocidad_gravedad = 0.005
+                self.velocidad_gravedad = 0.08
 
         self.dibujar()
 
@@ -237,7 +237,8 @@ class Juego:
                 if e['config']['color'] != None: COLOR_PIEZA = "#" + e['config']['color']
                 if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
                 if self.tipo_juego == 'SNAKE' and self.invencible: COLOR_PIEZA = power_color
-
+                if self.tipo_juego == 'SNAKE' and j == self.shapes[i].keys()[0] + '0': COLOR_PIEZA = COLOR_SNAKE_CABEZA
+                if self.tipo_juego == 'SNAKE' and j != self.shapes[i].keys()[0] + '0': COLOR_PIEZA = COLOR_SNAKE_CUERPO
                 if self.level == 'NYAN_CAT' and j == self.shapes[i].keys()[0] + '0': e['config']['style'] = 'CAT'
                 elif self.level == 'NYAN_CAT' and j != self.shapes[i].keys()[0] + '0': COLOR_PIEZA = '#%02x%02x%02x' % (random.randint(0,255), random.randint(0,255), random.randint(0,255))
                 matriz_pieza = e['estados'][e['config']['state_rotation']]

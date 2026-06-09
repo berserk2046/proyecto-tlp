@@ -1,0 +1,627 @@
+{
+  "shapes": {
+    "Z_PIECE": {
+      "estados": [
+        [
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            1
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            1, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": "090909", 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": null, 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }, 
+    "M_PIECE": {
+      "estados": [
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            1, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": null, 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }, 
+    "S_PIECE": {
+      "estados": [
+        [
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            1
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ]
+        ], 
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            1, 
+            0, 
+            0
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": "40", 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }, 
+    "L_PIECE": {
+      "estados": [
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1
+          ], 
+          [
+            1, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            1
+          ], 
+          [
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            0
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": "099000", 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": null, 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }, 
+    "T_PIECE": {
+      "estados": [
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            1, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": null, 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }, 
+    "I_PIECE": {
+      "estados": [
+        [
+          [
+            0, 
+            1, 
+            0, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0, 
+            0
+          ], 
+          [
+            0, 
+            1, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            0, 
+            0
+          ], 
+          [
+            0, 
+            0, 
+            0, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            0, 
+            1, 
+            0
+          ], 
+          [
+            0, 
+            0, 
+            1, 
+            0
+          ]
+        ], 
+        [
+          [
+            0, 
+            0, 
+            0, 
+            0
+          ], 
+          [
+            0, 
+            0, 
+            0, 
+            0
+          ], 
+          [
+            1, 
+            1, 
+            1, 
+            1
+          ], 
+          [
+            0, 
+            0, 
+            0, 
+            0
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": "099090", 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": "40", 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }, 
+    "O_PIECE": {
+      "estados": [
+        [
+          [
+            1, 
+            1
+          ], 
+          [
+            1, 
+            1
+          ]
+        ]
+      ], 
+      "config": {
+        "style": null, 
+        "dmg": 0, 
+        "color": null, 
+        "hp": 100, 
+        "state_rotation": 0, 
+        "chance": null, 
+        "velocity": 1, 
+        "type": "PLAYER"
+      }
+    }
+  }, 
+  "tipo_juego": "TETRIS", 
+  "config": {
+    "target_score": 100000000, 
+    "grid_size": [
+      10, 
+      20
+    ], 
+    "power": "NO", 
+    "wall_collision": 1, 
+    "power_time": "10", 
+    "levels": "BABY"
+  }, 
+  "events": {
+    "ON_KEY_DOWN": [
+      {
+        "params": [
+          "DOWN"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "CURRENT_PIECE"
+      }
+    ], 
+    "ON_KEY_UP": [
+      {
+        "params": [], 
+        "accion": "ROTATE", 
+        "objeto": "CURRENT_PIECE"
+      }
+    ], 
+    "ON_TICK": [
+      {
+        "params": [
+          "DOWN"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "CURRENT_PIECE"
+      }
+    ], 
+    "ON_LINE_CLEAR": [
+      {
+        "params": [], 
+        "accion": "INCREASE_SCORE", 
+        "objeto": "100"
+      }
+    ], 
+    "ON_START": [
+      {
+        "params": [], 
+        "accion": "SPAWN", 
+        "objeto": "RANDOM_SHAPE"
+      }
+    ], 
+    "ON_KEY_RIGHT": [
+      {
+        "params": [
+          "RIGHT"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "CURRENT_PIECE"
+      }
+    ], 
+    "ON_KEY_LEFT": [
+      {
+        "params": [
+          "LEFT"
+        ], 
+        "accion": "MOVE", 
+        "objeto": "CURRENT_PIECE"
+      }
+    ]
+  }
+}

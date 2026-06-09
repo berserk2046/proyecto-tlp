@@ -9,7 +9,7 @@
         ]
       ], 
       "config": {
-        "style": null, 
+        "style": "CIRCLE", 
         "dmg": 0, 
         "color": null, 
         "hp": 100, 
@@ -27,9 +27,9 @@
       18, 
       18
     ], 
-    "power": 0, 
+    "power": "ON", 
     "wall_collision": 1, 
-    "power_time": 0, 
+    "power_time": "2", 
     "levels": "BABY"
   }, 
   "events": {
@@ -38,6 +38,15 @@
         "params": [], 
         "accion": "SET_DIRECTION", 
         "objeto": "DOWN"
+      }
+    ], 
+    "ON_DIFD": [
+      {
+        "params": [
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "BFOOD"
       }
     ], 
     "ON_EAT_FOOD": [
@@ -91,6 +100,20 @@
         "objeto": null
       }
     ], 
+    "ON_EAT_YFOOD": [
+      {
+        "params": [], 
+        "accion": "INCREASE_SCORE", 
+        "objeto": "50"
+      }, 
+      {
+        "params": [
+          "2"
+        ], 
+        "accion": "GROW", 
+        "objeto": "PLAYER"
+      }
+    ], 
     "ON_START": [
       {
         "params": [
@@ -110,6 +133,29 @@
         "objeto": "FOOD"
       }
     ], 
+    "ON_POWERUP": [
+      {
+        "params": [
+          "RANDOM"
+        ], 
+        "accion": "SPAWN", 
+        "objeto": "YFOOD"
+      }
+    ], 
+    "ON_COLLISION_WALL_NYAN": [
+      {
+        "params": [], 
+        "accion": "SET_SCORE", 
+        "objeto": "0"
+      }, 
+      {
+        "params": [
+          "ALL"
+        ], 
+        "accion": "DECREASE", 
+        "objeto": "PLAYER"
+      }
+    ], 
     "ON_KEY_UP": [
       {
         "params": [], 
@@ -122,6 +168,20 @@
         "params": [], 
         "accion": "SET_DIRECTION", 
         "objeto": "LEFT"
+      }
+    ], 
+    "ON_EAT_BFOOD": [
+      {
+        "params": [], 
+        "accion": "DECREASE_SCORE", 
+        "objeto": "10"
+      }, 
+      {
+        "params": [
+          "1"
+        ], 
+        "accion": "DECREASE", 
+        "objeto": "PLAYER"
       }
     ]
   }
