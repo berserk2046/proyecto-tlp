@@ -88,7 +88,8 @@ class Juego:
             self.puntos_boost = 300
         
         if self.tipo_juego == 'SNAKE':
-            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.05
+            self.velocidad_gravedad = 0.15 if self.level in ['BABY', 'ENTUSIASTA'] else 0.005
+            self.obstaculos = 0
             self.invencible = False
             self.tiempo_invencible = 0
             self.obstaculos = []
@@ -117,6 +118,7 @@ class Juego:
         self.timer_slow_gravedad = 0
         self.timer_random_events = 0
         self.ejecutar_evento('ON_START')
+        if self.tipo_juego == 'SNAKE' and self.level == 'NYAN_CAT': self.generar_obstaculos()
 
         self.timer_id = None # Para controlar el loop de Tkinter
 
@@ -169,6 +171,14 @@ class Juego:
         if self.tipo_juego == 'SNAKE' and self.invulnerable_obstaculo:
             if time.time() - self.tiempo_obstaculo >= 4:
                 self.invulnerable_obstaculo = False
+
+        if self.tipo_juego == 'SNAKE':
+            if 0 < self.puntuacion < 60: self.level = 'BABY'
+            if 60 <= self.puntuacion < 200: self.level = 'ENTUSIASTA'
+            if 200 <= self.puntuacion:
+                self.generar_obstaculos()
+                self.level = 'NYAN_CAT'
+                self.velocidad_gravedad = 0.005
 
         self.dibujar()
 
@@ -227,7 +237,9 @@ class Juego:
                 if e['config']['color'] != None: COLOR_PIEZA = "#" + e['config']['color']
                 if self.tipo_juego == 'TETRIS' and self.boost_xp: COLOR_PIEZA = '#FFD700'
                 if self.tipo_juego == 'SNAKE' and self.invencible: COLOR_PIEZA = power_color
-                if self.level == 'NYAN_CAT' and j != self.shapes[i].keys()[0] + '0': COLOR_PIEZA = '#%02x%02x%02x' % (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+
+                if self.level == 'NYAN_CAT' and j == self.shapes[i].keys()[0] + '0': e['config']['style'] = 'CAT'
+                elif self.level == 'NYAN_CAT' and j != self.shapes[i].keys()[0] + '0': COLOR_PIEZA = '#%02x%02x%02x' % (random.randint(0,255), random.randint(0,255), random.randint(0,255))
                 matriz_pieza = e['estados'][e['config']['state_rotation']]
                 for y_offset, fila in enumerate(matriz_pieza):
                     for x_offset, celda in enumerate(fila):
@@ -287,7 +299,6 @@ class Juego:
                 
                 if self.tipo_juego == 'SNAKE':
                     if verbo == 'SPAWN' and objeto == 'PLAYER': self.spawn_shape(objeto, param[0])
-                    if verbo == 'SPAWN' and objeto == 'WALLS': self.generar_obstaculos()
                     if verbo == 'SPAWN' and objeto in ['FOOD', 'BFOOD', 'YFOOD']: self.snake_spawn_comida(objeto, param[0])
                     if verbo == 'MOVE': self.mover_pieza(objeto,param[0])
                     if verbo == 'SET_DIRECTION': self.mover_pieza(objeto)
@@ -351,8 +362,6 @@ class Juego:
             if obj != 'ITEM':
                 entity['config']['hp'] = int(entity['config']['hp'])
             entity['config']['dmg'] = int(entity['config']['dmg'])
-            # Parameters for SNAKE type game
-            if self.level == 'NYAN_CAT'and self.entities_counter[obj]==0: self.entities[obj][shape_name]['config']['style'] = 'CAT'
         else:
             shape_name = obj+str(self.entities_counter[obj])
             entity = self.entities[obj][shape_name] = {'pos': [], 'regen': 50, 'config': {'type': 'COMIDA', 'color': "FFD700", 'style': 'CIRCLE'}}
@@ -679,12 +688,17 @@ class Juego:
             self.ejecutar_evento('ON_LINE_CLEAR')
 
     def generar_obstaculos(self):
+        if self.obstaculos: return
         shape_name = self.shapes['PLAYER'].keys()[0]
+        used_positions = []
+        for i in self.entities['COMIDA'].keys():
+            used_positions.append(list(self.entities['COMIDA'][i]['pos']))
         for i in range(8):
             x = random.randint(2, self.ancho - 3)
             y = random.randint(2, self.alto - 3)
-            if (x, y) not in self.entities['PLAYER'][shape_name+'0'] and (x,y) != self.entities['COMIDA']['COMIDA0']:
+            if [x,y] != self.entities['PLAYER'][shape_name+'0']['pos'] and [x,y] not in used_positions:
                 self.grid[y][x] = 1
+        self.obstaculos = 1
 
     def snake_crecer(self, objeto):
         for i in range(int(objeto)):

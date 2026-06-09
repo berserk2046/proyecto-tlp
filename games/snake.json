@@ -31,7 +31,7 @@
     "power": "ON", 
     "wall_collision": 1, 
     "power_time": "2", 
-    "levels": "NYAN_CAT"
+    "levels": "BABY"
   }, 
   "events": {
     "ON_KEY_DOWN": [
@@ -132,11 +132,6 @@
         ], 
         "accion": "SPAWN", 
         "objeto": "FOOD"
-      }, 
-      {
-        "params": [], 
-        "accion": "SPAWN", 
-        "objeto": "WALLS"
       }
     ], 
     "ON_POWERUP": [
